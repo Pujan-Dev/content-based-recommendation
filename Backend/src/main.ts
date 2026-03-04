@@ -1,12 +1,17 @@
 import express from "express"
 import dotenv from "dotenv"
-import { connectDb } from "./Config/database"
-import { setupSwagger } from "./Config/swagger"
-import router from "./Routing/routing"
+import { connectDb } from "./Config/database.js"
+import { setupSwagger } from "./Config/swagger.js"
+import router from "./Routing/routing.js"
 const app=express()
 app.use(express.json())
 dotenv.config()
 setupSwagger(app)
+
+import cookieParser from "cookie-parser"
+app.use(cookieParser())
+
+
 app.use('/backend',router)
 connectDb().then(()=>{
     app.listen(5000,()=>{

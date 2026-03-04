@@ -1,5 +1,5 @@
 import express from "express"
-import {handlelogin,handlesignup} from "../Controller/controller"
+import {handlelogin,handlesignup, handlelogout} from "../Controller/controller.js"
 const router = express.Router()
 
 /**
@@ -14,6 +14,8 @@ const router = express.Router()
  *           schema:
  *             type: object
  *             properties:
+ *               name:
+ *                 type: string
  *               email:
  *                 type: string
  *               password:
@@ -43,7 +45,20 @@ router.post('/login', handlelogin)
  *     responses:
  *       201:
  *         description: Signup successful
- */
+*/
 router.post('/signup', handlesignup)
 
+/**
+ * @openapi
+ * /backend/logout:
+ *   post:
+ *     summary: Logout user
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ */
+router.post('/logout', handlelogout)
+
+
 export default router
+
