@@ -21,7 +21,6 @@ export const syncUserToML = async (userId: string): Promise<void> => {
 
         const mlUsersCollection = mongoose.connection.db.collection("ml_users")
 
-        //  write user data in ML model's exact format
         await mlUsersCollection.updateOne(
             { user_id: userId },
             {
@@ -29,11 +28,13 @@ export const syncUserToML = async (userId: string): Promise<void> => {
                     user_id:  userId,
                     username: user.name,
 
-                    // 👇 ML format: category_preferences
-                    category_preferences: Object.fromEntries(user.categoryScore),
+                    preferences: {
+                        categories: [user.selectedCategory],
+                        language: "en"
+                    },
 
-                    // 👇 ML format: interaction_history
-                    interaction_history: [
+
+                    interactions: [
                         // likes → "upvote"
                         ...user.likedPosts.map((post) => ({
                             post_id:   post.postId,
@@ -57,13 +58,12 @@ export const syncUserToML = async (userId: string): Promise<void> => {
                     ]
                 }
             },
-            { upsert: true }  // 👈 create if not exists, update if exists
+            { upsert: true }
         )
 
         console.log(`syncUserToML: synced user ${userId}`)
 
     } catch (error) {
-        // 👇 never crash main flow if sync fails
         console.error("syncUserToML failed:", error)
     }
 }

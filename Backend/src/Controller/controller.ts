@@ -5,8 +5,6 @@ import User from "../Model/user.js"
 import type { MulterRequest } from "../Middleware/multer.js"
 import Post from "../Model/postschema.js"
 import type { IPost } from "../Model/postschema.js"
-import { syncUserToML } from "../helper/mlsync.js"
-
 
 export const handlesignup = async (req: Request, res: Response): Promise<void> => {
 
@@ -126,7 +124,6 @@ export const handlehome = async (req: Request, res: Response): Promise<void> => 
 
 
         try {
-            await syncUserToML(decoded.userId)
             const mlResponse = await fetch(
                 `http://localhost:8000/recommendations?user_id=${decoded.userId}&k=${limit}`,
                 { method: "GET" }
@@ -361,7 +358,6 @@ export const handleLike = async (req: Request, res: Response): Promise<void> => 
             await User.findByIdAndUpdate(userId, {
                 $pull: { likedPosts: post._id }
             })
-            await syncUserToML(userId)
             res.json({ success: true, message: "Post unliked", likesCount: post.likesCount - 1 })
         } else {
             await Post.findOneAndUpdate({ postId }, {
@@ -423,7 +419,6 @@ export const handleDislike = async (req: Request, res: Response): Promise<void> 
             await User.findByIdAndUpdate(userId, {
                 $pull: { dislikedPosts: post._id }
             })
-            await syncUserToML(userId)
             res.json({ success: true, message: "Dislike removed", dislikesCount: post.dislikesCount - 1 })
         } else {
             await Post.findOneAndUpdate({ postId }, {
@@ -476,7 +471,6 @@ export const handleTrack = async (req: Request, res: Response): Promise<void> =>
             },
             $inc: { [`categoryScore.${category}`]: 1 }
         })
-        await syncUserToML(decoded.userId)
         res.json({ success: true, message: "View tracked" })
 
     } catch (error) {
@@ -509,8 +503,7 @@ export const handleCategory = async (req: Request, res: Response): Promise<void>
             selectedCategory: category.toLowerCase()
         })
 
-        await syncUserToML(decoded.userId)
-
+        console.log("calling syncUserToML for:", decoded.userId)  // 👈
         res.status(200).json({ success: true, message: "Category saved successfully" })
 
     } catch (error) {
