@@ -30,12 +30,18 @@ RECENCY_WEIGHT = 0.2
 # Data Paths
 
 DATA_DIR = Path(__file__).parent / "data"
+print(DATA_DIR)
 POSTS_FILE = DATA_DIR / "posts.json"
 USERS_FILE = DATA_DIR / "users.json"
 FAISS_INDEX_FILE = DATA_DIR / "reddit_posts.faiss"
 PROCESSED_POSTS_FILE = DATA_DIR / "processed_posts.pkl"
 EMBEDDING_MODEL_DIR = DATA_DIR / "embedding_model"
-
+print(f"Data directory set to: {DATA_DIR}")
+print(f"Posts file path: {POSTS_FILE}")
+print(f"Users file path: {USERS_FILE}")
+print(f"FAISS index file path: {FAISS_INDEX_FILE}")
+print(f"Processed posts file path: {PROCESSED_POSTS_FILE}")
+print(f"Embedding model directory: {EMBEDDING_MODEL_DIR}")
 # MongoDB Configuration
 
 MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
