@@ -3,12 +3,12 @@ import dotenv from "dotenv"
 import { connectDb } from "./Config/database.js"
 import { setupSwagger } from "./Config/swagger.js"
 import router from "./Routing/routing.js"
+import cookieParser from "cookie-parser"
 const app=express()
 app.use(express.json())
 dotenv.config()
 setupSwagger(app)
 
-import cookieParser from "cookie-parser"
 app.use(cookieParser())
 
 
