@@ -1,30 +1,8 @@
+// Routing/routing.ts
 import express from "express"
-import {handlelogin,handlesignup, handlelogout} from "../Controller/controller.js"
-const router = express.Router()
+import { handlelogin, handlesignup, handlelogout } from "../Controller/controller.js"
 
-/**
- * @openapi
- * /backend/login:
- *   post:
- *     summary: Login user
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Login successful
- */
-router.post('/login', handlelogin)
+const router = express.Router()
 
 /**
  * @openapi
@@ -37,7 +15,16 @@ router.post('/login', handlelogin)
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - username
+ *               - email
+ *               - password
  *             properties:
+ *               name:
+ *                 type: string
+ *               username:
+ *                 type: string
  *               email:
  *                 type: string
  *               password:
@@ -45,8 +32,33 @@ router.post('/login', handlelogin)
  *     responses:
  *       201:
  *         description: Signup successful
-*/
+ */
 router.post('/signup', handlesignup)
+
+/**
+ * @openapi
+ * /backend/login:
+ *   post:
+ *     summary: Login user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ */
+router.post('/login', handlelogin)
 
 /**
  * @openapi
@@ -59,6 +71,4 @@ router.post('/signup', handlesignup)
  */
 router.post('/logout', handlelogout)
 
-
 export default router
-

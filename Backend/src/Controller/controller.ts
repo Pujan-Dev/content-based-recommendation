@@ -6,9 +6,10 @@ import User from "../Model/user.js"
 
 export const handlesignup = async (req: Request, res: Response): Promise<void> => {
     
-    const {name,email,password} = req.body
-    if (!name || !email || !password){
-        res.status(400).json({success : false, message: "Details are Missing"})
+    const { name, username, email, password } = req.body
+
+    if (!name || !username || !email || !password) {
+        res.status(400).json({ success: false, message: "Details are Missing" })
         return
     }
     try{
@@ -17,8 +18,14 @@ export const handlesignup = async (req: Request, res: Response): Promise<void> =
             res.status(400).json({success: false, message: "User already exists"})
             return
         }
+        const existingUsername = await User.findOne({ username })
+        if (existingUsername) {
+            res.status(400).json({ success: false, message: "Username already taken" })
+            return
+        }
+        
         const hashedPassword = await bcrypt.hash(password,10)
-        await User.create({name, email, password: hashedPassword })
+        await User.create({name,username, email, password: hashedPassword })
         res.status(201).json({ message: "Signup success" })
     }
     catch(error){

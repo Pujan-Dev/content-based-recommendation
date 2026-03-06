@@ -1,4 +1,4 @@
-// Routes/postRoutes.ts
+// Routing/postRouting.ts
 import express from "express"
 import {
     handleCreatePost,
@@ -24,10 +24,16 @@ const router = express.Router()
  *         multipart/form-data:
  *           schema:
  *             type: object
+ *             required:
+ *               - title
+ *               - body
+ *               - final_category
  *             properties:
- *               caption:
+ *               title:
  *                 type: string
- *               category:
+ *               body:
+ *                 type: string
+ *               final_category:
  *                 type: string
  *               image:
  *                 type: string
@@ -72,9 +78,11 @@ router.get("/:id", protect, handleGetPost)
  *           schema:
  *             type: object
  *             properties:
- *               caption:
+ *               title:
  *                 type: string
- *               category:
+ *               body:
+ *                 type: string
+ *               final_category:
  *                 type: string
  *               image:
  *                 type: string

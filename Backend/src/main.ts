@@ -9,7 +9,7 @@ import { setupSwagger } from "./Config/swagger.js"
 import router from "./Routing/routing.js"
 import userRouter from "./Routing/userRouting.js"
 import postRouter from "./Routing/postRouting.js"
-import feedRouter from "./Routing/feedRouting.js"
+
 
 initCloudinary()
 
@@ -22,7 +22,7 @@ setupSwagger(app)
 app.use('/backend',router)
 app.use("/user", userRouter)
 app.use("/post", postRouter)
-app.use("/feed", feedRouter)
+
 
 
 connectDb().then(()=>{
