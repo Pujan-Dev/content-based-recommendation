@@ -1,6 +1,17 @@
 # Social Media Recommendation API
 
 FastAPI backend for text-based social media recommendation system using FAISS and hybrid ranking.
+## Models & Data
+
+The embedding model and processed posts data are required to run this API.
+
+**Download from:** [Google Drive](https://drive.google.com/drive/folders/1Q1k0vIONSwLTS2ucounp-5cMnyJrA_ig?usp=drive_link)
+
+**Setup:**
+1. Download `embedding_model` and `processed_posts.pkl`
+2. Place them in the `fastapi/data/` folder
+
+
 
 ## Features
 
