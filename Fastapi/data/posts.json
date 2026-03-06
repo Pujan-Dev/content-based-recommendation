@@ -1,0 +1,52 @@
+[
+  {
+    "_id": "post_001",
+    "title": "Climate change solutions",
+    "body": "Scientific discoveries and insights into modern research.",
+    "category": "science",
+    "score": 9,
+    "comments": 2,
+    "created_at": "2025-07-30T14:49:04Z",
+    "embedding": [0.12, -0.44, 0.98, 0.33]
+  },
+  {
+    "_id": "post_002",
+    "title": "How to study effectively for exams",
+    "body": "Educational resources and learning strategies.",
+    "category": "education",
+    "score": 118,
+    "comments": 71,
+    "created_at": "2025-11-22T14:49:04Z",
+    "embedding": [0.42, -0.11, 0.63, 0.72]
+  },
+  {
+    "_id": "post_003",
+    "title": "Best gaming setups 2026",
+    "body": "Latest gaming PCs and console reviews for competitive gaming.",
+    "category": "gaming",
+    "score": 245,
+    "comments": 89,
+    "created_at": "2026-02-15T10:30:00Z",
+    "embedding": [0.33, 0.55, -0.22, 0.91]
+  },
+  {
+    "_id": "post_004",
+    "title": "Python web development with FastAPI",
+    "body": "Complete guide to building high-performance APIs with FastAPI and MongoDB.",
+    "category": "technology",
+    "score": 567,
+    "comments": 134,
+    "created_at": "2026-01-20T08:15:00Z",
+    "embedding": [0.78, -0.33, 0.12, 0.45]
+  },
+  {
+    "_id": "post_005",
+    "title": "Healthy meal prep ideas",
+    "body": "Simple and nutritious recipes for meal preparation throughout the week.",
+    "category": "food_cooking",
+    "score": 189,
+    "comments": 56,
+    "created_at": "2026-02-28T16:45:00Z",
+    "embedding": [0.21, 0.67, -0.44, 0.88]
+  }
+]
