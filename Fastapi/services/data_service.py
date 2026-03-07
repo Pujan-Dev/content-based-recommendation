@@ -7,6 +7,7 @@ import json
 from datetime import datetime, timedelta
 import random
 from pymongo import MongoClient
+from bson import ObjectId
 from sentence_transformers import SentenceTransformer
 import faiss
 from pathlib import Path
@@ -51,11 +52,19 @@ class DataStore:
         try:
             self.mongo_client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
             self.mongo_client.admin.command("ping")
-            self.mongo_db = self.mongo_client[MONGODB_DATABASE]
+
+            db_name = MONGODB_DATABASE
+            if not db_name:
+                default_db = self.mongo_client.get_default_database()
+                db_name = default_db.name if default_db is not None else None
+            if not db_name:
+                db_name = "social_media"
+
+            self.mongo_db = self.mongo_client[db_name]
             self.posts_collection = self.mongo_db[MONGODB_POSTS_COLLECTION]
             self.users_collection = self.mongo_db[MONGODB_USERS_COLLECTION]
             self.using_mongodb = True
-            print(f"Connected to MongoDB: {MONGODB_DATABASE}")
+            print(f"Connected to MongoDB: {db_name}")
         except Exception as e:
             print(f"MongoDB connection failed: {e}")
             print("Falling back to JSON file mode")
@@ -84,19 +93,63 @@ class DataStore:
 
         if posts_count == 0 and json_posts:
             for post in json_posts:
-                post_id = post.get("_id") or post.get("id")
-                if not post_id:
+                raw_id = post.get("_id") or post.get("id")
+                if not raw_id:
                     continue
-                post["_id"] = str(post_id)
-                self.posts_collection.replace_one({"_id": post["_id"]}, post, upsert=True)
+
+                if isinstance(raw_id, str) and len(raw_id) == 24:
+                    mongo_id = ObjectId(raw_id)
+                else:
+                    mongo_id = ObjectId()
+
+                created_utc = post.get("createdUtc") or post.get("created_at") or datetime.now().isoformat() + "Z"
+                num_comments = post.get("numComments", post.get("comments", 0))
+
+                normalized_post = {
+                    "_id": mongo_id,
+                    "postId": str(mongo_id),
+                    "title": post.get("title", ""),
+                    "body": post.get("body", ""),
+                    "subreddit": post.get("subreddit", "general"),
+                    "category": post.get("category", "uncategorized"),
+                    "score": post.get("score", 0),
+                    "numComments": num_comments,
+                    "createdUtc": created_utc,
+                    "engagementScore": post.get("engagementScore", 0),
+                    "wordCount": post.get("wordCount", 0),
+                    "postLength": post.get("postLength", 0),
+                    "recencyWeight": post.get("recencyWeight", 0),
+                    "hourPosted": post.get("hourPosted", 0),
+                    "dayOfWeek": post.get("dayOfWeek", 0),
+                    "image": post.get("image", None),
+                    "likes": post.get("likes", []),
+                    "dislikes": post.get("dislikes", []),
+                    "likesCount": post.get("likesCount", 0),
+                    "dislikesCount": post.get("dislikesCount", 0),
+                    "embedding": post.get("embedding", []),
+                }
+
+                self.posts_collection.replace_one({"_id": normalized_post["_id"]}, normalized_post, upsert=True)
             print(f"Loaded posts into MongoDB: {len(json_posts)}")
 
         if users_count == 0 and json_users:
             for user in json_users:
-                user_id = user.get("user_id")
-                if not user_id:
-                    continue
-                self.users_collection.replace_one({"user_id": user_id}, user, upsert=True)
+                name = user.get("name") or user.get("username") or f"user_{random.randint(1000,9999)}"
+                email = user.get("email") or f"{name}@example.com"
+
+                normalized_user = {
+                    "name": name,
+                    "email": email,
+                    "password": user.get("password", "temp_password"),
+                    "role": user.get("role", "user"),
+                    "selectedCategory": user.get("selectedCategory"),
+                    "categoryScore": user.get("categoryScore", {}),
+                    "viewHistory": user.get("viewHistory", []),
+                    "likedPosts": user.get("likedPosts", []),
+                    "dislikedPosts": user.get("dislikedPosts", []),
+                }
+
+                self.users_collection.replace_one({"email": email}, normalized_user, upsert=True)
             print(f"Loaded users into MongoDB: {len(json_users)}")
 
     def load_from_mongodb(self):
@@ -115,13 +168,23 @@ class DataStore:
                 {},
                 {
                     "_id": 1,
+                    "postId": 1,
                     "id": 1,
                     "title": 1,
                     "body": 1,
+                    "subreddit": 1,
                     "category": 1,
                     "score": 1,
+                    "numComments": 1,
                     "comments": 1,
+                    "createdUtc": 1,
                     "created_at": 1,
+                    "engagementScore": 1,
+                    "wordCount": 1,
+                    "postLength": 1,
+                    "recencyWeight": 1,
+                    "hourPosted": 1,
+                    "dayOfWeek": 1,
                     "embedding": 1,
                 },
             )
@@ -133,6 +196,10 @@ class DataStore:
                     "_id": 1,
                     "user_id": 1,
                     "username": 1,
+                    "email": 1,
+                    "selectedCategory": 1,
+                    "categoryScore": 1,
+                    "viewHistory": 1,
                     "preferences": 1,
                     "interactions": 1,
                 },
@@ -141,8 +208,70 @@ class DataStore:
 
         for post in self.posts:
             post["_id"] = str(post.get("_id"))
+            post["postId"] = post.get("postId") or post.get("_id")
+            post["numComments"] = post.get("numComments", post.get("comments", 0))
+            post["comments"] = post["numComments"]
+            post["createdUtc"] = post.get("createdUtc") or post.get("created_at")
+            post["created_at"] = post.get("created_at") or post.get("createdUtc")
+            post["likes"] = [str(item) for item in post.get("likes", [])]
+            post["dislikes"] = [str(item) for item in post.get("dislikes", [])]
+            post["likesCount"] = post.get("likesCount", len(post["likes"]))
+            post["dislikesCount"] = post.get("dislikesCount", len(post["dislikes"]))
+
+        for user in self.users:
+            user["_id"] = str(user.get("_id")) if user.get("_id") is not None else None
+            user_id = user.get("user_id") or str(user.get("_id"))
+            user["user_id"] = user_id
+
+            user["likedPosts"] = [str(item) for item in user.get("likedPosts", [])]
+            user["dislikedPosts"] = [str(item) for item in user.get("dislikedPosts", [])]
+
+            normalized_view_history = []
+            for item in user.get("viewHistory", []):
+                normalized_view_history.append(
+                    {
+                        "postId": str(item.get("postId")) if item.get("postId") is not None else None,
+                        "category": item.get("category", ""),
+                        "dwellTime": item.get("dwellTime", 0),
+                        "viewedAt": item.get("viewedAt"),
+                    }
+                )
+            user["viewHistory"] = normalized_view_history
+
+            if not user.get("preferences"):
+                selected = user.get("selectedCategory")
+                top_categories = []
+
+                category_score = user.get("categoryScore", {})
+                if isinstance(category_score, dict) and category_score:
+                    sorted_categories = sorted(
+                        category_score.items(),
+                        key=lambda item: item[1],
+                        reverse=True,
+                    )
+                    top_categories = [cat for cat, score in sorted_categories if score > 0][:5]
+
+                if not top_categories and selected:
+                    top_categories = [selected]
+
+                user["preferences"] = {"categories": top_categories}
+
+            if not user.get("interactions") and user.get("viewHistory"):
+                interactions = []
+                for item in user.get("viewHistory", []):
+                    interactions.append(
+                        {
+                            "post_id": str(item.get("postId")),
+                            "category": item.get("category", ""),
+                            "action": "view",
+                            "dwell_time": item.get("dwellTime", 0),
+                            "timestamp": item.get("viewedAt"),
+                        }
+                    )
+                user["interactions"] = interactions
 
         self.posts_by_id = {str(p.get("_id")): p for p in self.posts if p.get("_id") is not None}
+        self.posts_by_id.update({str(p.get("postId")): p for p in self.posts if p.get("postId") is not None})
         self.users_by_id = {u["user_id"]: u for u in self.users if u.get("user_id")}
 
         print(f"Loaded {len(self.posts)} posts from MongoDB")
@@ -215,7 +344,16 @@ class DataStore:
         if POSTS_FILE.exists():
             with open(POSTS_FILE, 'r') as f:
                 self.posts = json.load(f)
-                self.posts_by_id = {p['_id']: p for p in self.posts}
+                for post in self.posts:
+                    post["_id"] = str(post.get("_id"))
+                    post["postId"] = post.get("postId") or post.get("_id")
+                    post["numComments"] = post.get("numComments", post.get("comments", 0))
+                    post["comments"] = post["numComments"]
+                    post["createdUtc"] = post.get("createdUtc") or post.get("created_at")
+                    post["created_at"] = post.get("created_at") or post.get("createdUtc")
+
+                self.posts_by_id = {str(p.get("_id")): p for p in self.posts}
+                self.posts_by_id.update({str(p.get("postId")): p for p in self.posts if p.get("postId") is not None})
                 print(f"Loaded {len(self.posts)} posts from {POSTS_FILE.name}")
         else:
             raise FileNotFoundError(f"Posts file not found: {POSTS_FILE}")
@@ -223,7 +361,13 @@ class DataStore:
         if USERS_FILE.exists():
             with open(USERS_FILE, 'r') as f:
                 self.users = json.load(f)
-                self.users_by_id = {u.get('user_id', u.get('_id')): u for u in self.users}
+                for user in self.users:
+                    user_id = user.get("user_id") or str(user.get("_id"))
+                    user["user_id"] = user_id
+                    user.setdefault("preferences", {"categories": []})
+                    user.setdefault("interactions", [])
+
+                self.users_by_id = {u.get('user_id'): u for u in self.users if u.get("user_id")}
                 print(f"Loaded {len(self.users)} users from {USERS_FILE.name}")
         else:
             raise FileNotFoundError(f"Users file not found: {USERS_FILE}")

@@ -1,8 +1,21 @@
-import express from "express"
-import { handlelogin, handlesignup, handlelogout, handlehome, handlepost, handleLike, handleDislike, handleTrack, handleCategory } from "../Controller/controller.js"
-import { protect } from "../Middleware/tokens.js"
-import uploads from "../Middleware/multer.js"
-const router = express.Router()
+import express from "express";
+import {
+  handlelogin,
+  handlesignup,
+  handlelogout,
+  handlehome,
+  handlepost,
+  handleLike,
+  handleDislike,
+  handleTrack,
+  handleCategory,
+  handleAdminGetAllPosts,
+  handleAdminGetAllUsers,
+  handleAdminDeletePost,
+} from "../Controller/controller.js";
+import { protect } from "../Middleware/tokens.js";
+import uploads from "../Middleware/multer.js";
+const router = express.Router();
 
 /**
  * @openapi
@@ -33,7 +46,7 @@ const router = express.Router()
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login', handlelogin)
+router.post("/login", handlelogin);
 
 /**
  * @openapi
@@ -68,7 +81,7 @@ router.post('/login', handlelogin)
  *       400:
  *         description: User already exists or missing details
  */
-router.post('/signup', handlesignup)
+router.post("/signup", handlesignup);
 
 /**
  * @openapi
@@ -81,7 +94,7 @@ router.post('/signup', handlesignup)
  *       200:
  *         description: Logout successful
  */
-router.post('/logout', handlelogout)
+router.post("/logout", handlelogout);
 
 /**
  * @openapi
@@ -136,7 +149,7 @@ router.post('/logout', handlelogout)
  *       401:
  *         description: Unauthorized
  */
-router.get('/home', protect, handlehome)
+router.get("/home", protect, handlehome);
 
 /**
  * @openapi
@@ -222,7 +235,7 @@ router.get('/home', protect, handlehome)
  *       500:
  *         description: Internal server error
  */
-router.post('/post', protect, uploads.single('image'), handlepost)
+router.post("/post", protect, uploads.single("image"), handlepost);
 
 /**
  * @openapi
@@ -260,7 +273,7 @@ router.post('/post', protect, uploads.single('image'), handlepost)
  *       401:
  *         description: Unauthorized
  */
-router.post('/post/:postId/like', protect, handleLike)
+router.post("/post/:postId/like", protect, handleLike);
 
 /**
  * @openapi
@@ -298,7 +311,7 @@ router.post('/post/:postId/like', protect, handleLike)
  *       401:
  *         description: Unauthorized
  */
-router.post('/post/:postId/dislike', protect, handleDislike)
+router.post("/post/:postId/dislike", protect, handleDislike);
 
 /**
  * @openapi
@@ -347,12 +360,7 @@ router.post('/post/:postId/dislike', protect, handleDislike)
  *       500:
  *         description: Internal server error
  */
-router.post('/track', protect, handleTrack)
-
-
-
-
-
+router.post("/track", protect, handleTrack);
 
 /**
  * @openapi
@@ -394,5 +402,79 @@ router.post('/track', protect, handleTrack)
  *       500:
  *         description: Internal server error
  */
-router.post('/category', protect, handleCategory)
-export default router
+router.post("/category", protect, handleCategory);
+
+/**
+ * @openapi
+ * /backend/admin/posts:
+ *   get:
+ *     summary: Get all posts (admin)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Posts per page
+ *     responses:
+ *       200:
+ *         description: Posts fetched successfully
+ *       401:
+ *         description: Unauthorized
+ */
+router.get("/admin/posts", protect, handleAdminGetAllPosts);
+
+/**
+ * @openapi
+ * /backend/admin/users:
+ *   get:
+ *     summary: Get all users (admin)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Users fetched successfully
+ *       401:
+ *         description: Unauthorized
+ */
+router.get("/admin/users", protect, handleAdminGetAllUsers);
+
+/**
+ * @openapi
+ * /backend/admin/post/{postId}:
+ *   delete:
+ *     summary: Delete a post (admin)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The post ID to delete
+ *     responses:
+ *       200:
+ *         description: Post deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Post not found
+ */
+router.delete("/admin/post/:postId", protect, handleAdminDeletePost);
+
+export default router;

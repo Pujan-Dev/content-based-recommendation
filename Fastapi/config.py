@@ -17,7 +17,6 @@ EMBEDDING_DIMENSION = 384  # all-MiniLM-L6-v2 embedding size
 EMBEDDING_MODEL_NAME = "paraphrase-MiniLM-L3-v2"
 
 # FAISS Configuration
-
 TOP_K_CANDIDATES = 30  # Number of candidates to retrieve from FAISS
 FINAL_RECOMMENDATIONS = 10  # Number of recommendations to return
 
@@ -44,8 +43,8 @@ print(f"Processed posts file path: {PROCESSED_POSTS_FILE}")
 print(f"Embedding model directory: {EMBEDDING_MODEL_DIR}")
 # MongoDB Configuration
 
-MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
-MONGODB_DATABASE = os.getenv("MONGODB_DATABASE", "social_media")
+MONGODB_URI = os.getenv("MONGO_URI") or os.getenv("MONGODB_URI", "mongodb://localhost:27017")
+MONGODB_DATABASE = os.getenv("MONGODB_DATABASE") or os.getenv("MONGO_DB_NAME", "social_media")
 MONGODB_POSTS_COLLECTION = os.getenv("MONGODB_POSTS_COLLECTION", "posts")
 MONGODB_USERS_COLLECTION = os.getenv("MONGODB_USERS_COLLECTION", "users")
 
