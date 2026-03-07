@@ -7,6 +7,13 @@ interface IViewHistory {
   viewedAt: Date;
 }
 
+interface IViewHistory {
+  postId: mongoose.Types.ObjectId
+  category: string
+    dwellTime: number 
+  viewedAt: Date
+}
+
 export interface IUser extends Document {
   name: string;
   email: string;
