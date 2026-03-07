@@ -9,11 +9,10 @@ This module provides background/batch workers for:
 """
 
 from typing import Dict, Any, List
-import uuid
 from datetime import datetime
 import numpy as np
 import asyncio
-import time
+from bson import ObjectId
 from sentence_transformers import SentenceTransformer
 
 
@@ -81,8 +80,9 @@ class PostEncodingWorker:
             if field not in post_data or not post_data[field]:
                 raise ValueError(f"Missing or empty required field: {field}")
         
-        # Generate unique ID
-        post_id = f"post_{uuid.uuid4().hex[:8]}"
+        # Generate Mongo ObjectId and backend-style postId
+        mongo_id = ObjectId()
+        post_id = str(mongo_id)
         
         # Create encoding text (title + body)
         text_to_encode = f"{post_data['title']} {post_data['body']}"
@@ -91,28 +91,48 @@ class PostEncodingWorker:
         embedding = self.encode_text(text_to_encode)
         
         # Create complete document
+        now_iso = datetime.now().isoformat() + "Z"
+        num_comments = post_data.get("numComments", post_data.get("comments", 0))
+        created_utc = post_data.get("createdUtc", post_data.get("created_at", now_iso))
+
         post_document = {
-            "_id": post_id,
+            "_id": mongo_id,
+            "postId": post_id,
             "title": post_data["title"],
             "body": post_data["body"],
+            "subreddit": post_data.get("subreddit", "general"),
             "category": post_data["category"],
             "score": post_data.get("score", 0),
-            "comments": post_data.get("comments", 0),
-            "created_at": datetime.now().isoformat() + "Z",
+            "numComments": num_comments,
+            "comments": num_comments,
+            "createdUtc": created_utc,
+            "created_at": created_utc,
+            "engagementScore": post_data.get("engagementScore", 0.0),
+            "wordCount": post_data.get("wordCount", 0),
+            "postLength": post_data.get("postLength", 0),
+            "recencyWeight": post_data.get("recencyWeight", 0.0),
+            "hourPosted": post_data.get("hourPosted", 0),
+            "dayOfWeek": post_data.get("dayOfWeek", 0),
+            "image": post_data.get("image", None),
+            "likes": [],
+            "dislikes": [],
+            "likesCount": 0,
+            "dislikesCount": 0,
             "embedding": embedding
         }
         
         self.data_store.posts_collection.insert_one(post_document)
         print(f"Encoded post: {post_id} ({post_data['title'][:40]}...)")
         
-        self.data_store.posts.append(post_document)
-        self.data_store.posts_by_id[post_id] = post_document
+        cache_document = {**post_document, "_id": str(post_document["_id"])}
+        self.data_store.posts.append(cache_document)
+        self.data_store.posts_by_id[post_id] = cache_document
         
         if self.data_store.faiss_index is not None:
             embedding_vector = np.array([embedding], dtype='float32')
             self.data_store.faiss_index.add(embedding_vector)
         
-        return post_document
+        return cache_document
     
     def batch_encode_posts(self, posts_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
@@ -162,7 +182,7 @@ class PostEncodingWorker:
         new_embedding = self.encode_text(new_text)
         
         self.data_store.posts_collection.update_one(
-            {"_id": post_id},
+            {"postId": post_id},
             {"$set": {"embedding": new_embedding}}
         )
         
@@ -312,7 +332,7 @@ class BackgroundPostMonitor:
                                 "body": post.get("body", ""),
                                 "category": post.get("category", ""),
                                 "score": post.get("score", 0),
-                                "comments": post.get("comments", 0)
+                                "numComments": post.get("numComments", post.get("comments", 0)),
                             }
                             
                             text_to_encode = f"{post_data['title']} {post_data['body']}"
@@ -324,7 +344,9 @@ class BackgroundPostMonitor:
                             )
                             
                             post["embedding"] = embedding
-                            self.data_store.posts_by_id[post["_id"]] = post
+                            post_key = str(post.get("postId") or post.get("_id"))
+                            post["_id"] = str(post.get("_id"))
+                            self.data_store.posts_by_id[post_key] = post
                             
                             if self.data_store.faiss_index is not None:
                                 embedding_vector = np.array([embedding], dtype='float32')
