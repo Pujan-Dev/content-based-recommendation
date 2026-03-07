@@ -104,7 +104,6 @@ export const handlehome = async (req: Request, res: Response): Promise<void> => 
             return
         }
 
-        //  user ley just signed up gareko xa rah yedi kunai filed selection garena bhaney yesley hadnle garxa
         if (!user.selectedCategory) {
             res.status(200).json({
                 success: true,
@@ -116,57 +115,109 @@ export const handlehome = async (req: Request, res: Response): Promise<void> => 
 
         const mergedScore: Record<string, number> = {}
 
-        // hami ley naya user ho ki nai check garxau if te user has no categoryScore, no likedPosts, and no viewHistory, then we consider them a new user
         const isNewUser =
             user.categoryScore.size === 0 &&
             user.likedPosts.length === 0 &&
             user.viewHistory.length === 0
 
+        // ── ML 
+try {
+    const k = Math.min(skip + limit, 50)
 
-        try {
-            const mlResponse = await fetch(
-                `http://localhost:8000/recommendations?user_id=${decoded.userId}&k=${limit}`,
-                { method: "GET" }
-            )
+    await fetch(`http://localhost:8000/users/${decoded.userId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            user_id: decoded.userId,
+            username: user.name,
+            category_preferences: Object.fromEntries(user.categoryScore),
+            interaction_history: [
+                ...user.likedPosts.map((post: IPost) => ({
+                    post_id: post._id.toString(),
+                    action: "upvote",
+                    timestamp: post.createdUtc
+                })),
+                ...user.dislikedPosts.map((post: IPost) => ({
+                    post_id: post._id.toString(),
+                    action: "downvote",
+                    timestamp: post.createdUtc
+                }))
+            ]
+        })
+    })
 
-            if (mlResponse.ok) {
-                const mlData = await mlResponse.json()
-                const recommendedPostIds = mlData.recommendations.map(
-                    (r: { post_id: string }) => r.post_id
-                )
+    const mlResponse = await fetch(
+        `http://localhost:8000/recommendations?user_id=${encodeURIComponent(decoded.userId)}&k=${k}`,
+        { method: "GET" }
+    )
 
-                const posts = await Post.find({
-                    postId: { $in: recommendedPostIds }
-                })
-                    .sort({ recencyWeight: -1, engagementScore: -1, createdUtc: -1 })
-                    .skip(skip)
-                    .limit(limit)
+    if (!mlResponse.ok) {
+        throw new Error(`ML service responded with status: ${mlResponse.status}`)
+    }
 
-                const totalCount = mlData.total_candidates ?? posts.length
-                const totalPages = Math.ceil(totalCount / limit)
+    const mlData = await mlResponse.json()
 
-                res.status(200).json({
-                    success: true,
-                    requiresCategory: false,
-                    isNewUser,
-                    message: "Feed data fetched successfully",
-                    data: posts,
-                    page,
-                    limit,
-                    totalCount,
-                    totalPages,
-                    hasMore: page < totalPages
-                })
-                return
-            }
-        } catch (mlError) {
-            //  ML model unavailable — fall back to mergedScore logic
-            console.error("ML model unavailable, using fallback:", mlError)
-        }
+    if (!mlData.recommendations?.length) {
+        res.status(200).json({
+            success: true,
+            requiresCategory: false,
+            isNewUser,
+            message: "No recommendations available",
+            data: [],
+            page,
+            limit,
+            totalCount: 0,
+            totalPages: 0,
+            hasMore: false
+        })
+        return
+    }
+
+    const recommendedPostIds = mlData.recommendations.map(
+        (r: { post_id: string }) => r.post_id
+    )
+
+const posts = await Post.find({ postId: { $in: recommendedPostIds } })
+const postMap = new Map(posts.map(p => [p.postId, p]))
+    const scoreMap = new Map(
+        mlData.recommendations.map((r: any) => [r.post_id, r])
+    )
+
+    const orderedPosts = recommendedPostIds
+        .map((id: string) => {
+            const post = postMap.get(id)
+            const mlScore = scoreMap.get(id)
+            return post ? { ...post.toObject(), mlScore } : null
+        })
+        .filter(Boolean)
+        .slice(skip, skip + limit)
+
+    const totalCount = mlData.total_candidates ?? orderedPosts.length
+    const totalPages = Math.ceil(totalCount / limit)
+
+    res.status(200).json({
+        success: true,
+        requiresCategory: false,
+        isNewUser,
+        message: "Feed data fetched successfully",
+        data: orderedPosts,
+        page,
+        limit,
+        totalCount,
+        totalPages,
+        hasMore: page < totalPages
+    })
+    return
+
+} catch (mlError) {
+    console.error("ML model unavailable, using fallback:", mlError)
+}
+// END ML
 
 
-        // we are handling based on the score i.e if our user is new than they have only 1 socre and if they are returing user than they will have wached history and than some user may like post they also have liked post
 
+
+        // FALLBACK LOGIC
         if (isNewUser) {
             mergedScore[user.selectedCategory] = 1
         } else {
@@ -176,13 +227,11 @@ export const handlehome = async (req: Request, res: Response): Promise<void> => 
                 }
             }
 
-            // we are giving more weightage to liked post category as compare to view history category because if user like the post that means they are more interested in that category than just watching the post this will be asked to pujan to give more weightage to liked post category as compare to view history category
             if (user.likedPosts.length > 0) {
                 for (const post of user.likedPosts) {
                     mergedScore[post.category] = (mergedScore[post.category] ?? 0) + 1
                 }
             }
-
 
             if (user.dislikedPosts.length > 0) {
                 for (const post of user.dislikedPosts) {
@@ -191,12 +240,11 @@ export const handlehome = async (req: Request, res: Response): Promise<void> => 
             }
         }
 
-        // new user ko lagi hamile just selected category ko score 1 diyeko xam but returning user ko lagi hamile category score, liked post ko category score lai merge garera top 3 category nikaleko xam
         const topCategories: string[] = isNewUser
             ? [user.selectedCategory]
             : Object.entries(mergedScore)
                 .filter(([, score]) => score > 0)
-                .sort((a, b) => b[1] - a[1]) // highes to lowest score anusar sort gareko xam
+                .sort((a, b) => b[1] - a[1])
                 .slice(0, 3)
                 .map(([cat]) => cat)
 
@@ -306,9 +354,6 @@ export const handlepost = async (req: MulterRequest, res: Response): Promise<voi
             image: imageUrl
         })
 
-        await Post.findByIdAndUpdate(newPost._id, {
-            postId: newPost._id.toString()
-        })
         res.status(201).json({ success: true, message: "Post created successfully", data: newPost })
 
     } catch (error) {
@@ -350,29 +395,41 @@ export const handleLike = async (req: Request, res: Response): Promise<void> => 
 
         const alreadyLiked = post.likes.some((id: any) => id.toString() === userId)
 
-        if (alreadyLiked) {
-            await Post.findOneAndUpdate({ postId }, {
-                $pull: { likes: userId },
-                $inc: { likesCount: -1 }
-            })
-            await User.findByIdAndUpdate(userId, {
-                $pull: { likedPosts: post._id }
-            })
-            res.json({ success: true, message: "Post unliked", likesCount: post.likesCount - 1 })
-        } else {
-            await Post.findOneAndUpdate({ postId }, {
-                $addToSet: { likes: userId },
-                $pull: { dislikes: userId },
-                $inc: {
-                    likesCount: 1,
-                    dislikesCount: post.dislikes.some((id: any) => id.toString() === userId) ? -1 : 0
-                }
-            })
-            await User.findByIdAndUpdate(userId, {
-                $addToSet: { likedPosts: post._id },
-                $pull: { dislikedPosts: post._id },
-                $inc: { [`categoryScore.${post.category}`]: 2 }
-            })
+        // new line changed form here
+        
+if (alreadyLiked) {
+    await Post.findOneAndUpdate({ postId }, {
+        $pull: { likes: userId },
+        $inc: { likesCount: -1 }
+    })
+    await User.findByIdAndUpdate(userId, {
+        $pull: { likedPosts: post._id },
+        $inc: { [`categoryScore.${post.category}`]: -2 }
+    })
+    res.json({ success: true, message: "Post unliked", likesCount: post.likesCount - 1 })
+} else {
+    const hadDisliked = post.dislikes.some((id: any) => id.toString() === userId)
+
+    await Post.findOneAndUpdate({ postId }, {
+        $addToSet: { likes: userId },
+        $pull: { dislikes: userId },
+        $inc: {
+            likesCount: 1,
+            dislikesCount: hadDisliked ? -1 : 0
+        }
+    })
+    await User.findByIdAndUpdate(userId, {
+        $addToSet: { likedPosts: post._id },
+        $pull: { dislikedPosts: post._id },
+        $inc: { 
+            [`categoryScore.${post.category}`]: hadDisliked ? 3 : 2
+        
+        }
+    })
+
+
+// new line changed completed
+
             res.json({ success: true, message: "Post liked", likesCount: post.likesCount + 1 })
         }
     } catch (error) {
@@ -410,29 +467,37 @@ export const handleDislike = async (req: Request, res: Response): Promise<void> 
         }
 
         const alreadyDisliked = post.dislikes.some((id: any) => id.toString() === userId)
+// new line changed
+if (alreadyDisliked) {
+    await Post.findOneAndUpdate({ postId }, {
+        $pull: { dislikes: userId },
+        $inc: { dislikesCount: -1 }
+    })
+    await User.findByIdAndUpdate(userId, {
+        $pull: { dislikedPosts: post._id },
+        $inc: { [`categoryScore.${post.category}`]: 1 } 
+    })
+    res.json({ success: true, message: "Dislike removed", dislikesCount: post.dislikesCount - 1 })
+} else {
+    const hadLiked = post.likes.some((id: any) => id.toString() === userId)
 
-        if (alreadyDisliked) {
-            await Post.findOneAndUpdate({ postId }, {
-                $pull: { dislikes: userId },
-                $inc: { dislikesCount: -1 }
-            })
-            await User.findByIdAndUpdate(userId, {
-                $pull: { dislikedPosts: post._id }
-            })
-            res.json({ success: true, message: "Dislike removed", dislikesCount: post.dislikesCount - 1 })
-        } else {
-            await Post.findOneAndUpdate({ postId }, {
-                $addToSet: { dislikes: userId },
-                $pull: { likes: userId },
-                $inc: {
-                    dislikesCount: 1,
-                    likesCount: post.likes.some((id: any) => id.toString() === userId) ? -1 : 0
-                }
-            })
-            await User.findByIdAndUpdate(userId, {
-                $addToSet: { dislikedPosts: post._id },
-                $pull: { likedPosts: post._id }
-            })
+    await Post.findOneAndUpdate({ postId }, {
+        $addToSet: { dislikes: userId },
+        $pull: { likes: userId },
+        $inc: {
+            dislikesCount: 1,
+            likesCount: hadLiked ? -1 : 0
+        }
+    })
+    await User.findByIdAndUpdate(userId, {
+        $addToSet: { dislikedPosts: post._id },
+        $pull: { likedPosts: post._id },
+        $inc: { 
+            [`categoryScore.${post.category}`]: hadLiked ? -3 : -1
+        }
+    })
+// new line changed completed
+
             res.json({ success: true, message: "Post disliked", dislikesCount: post.dislikesCount + 1 })
         }
     } catch (error) {
@@ -503,7 +568,6 @@ export const handleCategory = async (req: Request, res: Response): Promise<void>
             selectedCategory: category.toLowerCase()
         })
 
-        console.log("calling syncUserToML for:", decoded.userId)  // 👈
         res.status(200).json({ success: true, message: "Category saved successfully" })
 
     } catch (error) {
@@ -517,5 +581,3 @@ export const handleCategory = async (req: Request, res: Response): Promise<void>
     }
 }
 
-
-// for sync to pujan ml model
