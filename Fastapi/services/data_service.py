@@ -219,8 +219,24 @@ class DataStore:
             post["dislikesCount"] = post.get("dislikesCount", len(post["dislikes"]))
 
         for user in self.users:
+            user["_id"] = str(user.get("_id")) if user.get("_id") is not None else None
             user_id = user.get("user_id") or str(user.get("_id"))
             user["user_id"] = user_id
+
+            user["likedPosts"] = [str(item) for item in user.get("likedPosts", [])]
+            user["dislikedPosts"] = [str(item) for item in user.get("dislikedPosts", [])]
+
+            normalized_view_history = []
+            for item in user.get("viewHistory", []):
+                normalized_view_history.append(
+                    {
+                        "postId": str(item.get("postId")) if item.get("postId") is not None else None,
+                        "category": item.get("category", ""),
+                        "dwellTime": item.get("dwellTime", 0),
+                        "viewedAt": item.get("viewedAt"),
+                    }
+                )
+            user["viewHistory"] = normalized_view_history
 
             if not user.get("preferences"):
                 selected = user.get("selectedCategory")
