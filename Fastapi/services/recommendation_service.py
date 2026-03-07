@@ -33,7 +33,7 @@ class RecommendationService:
             Normalized engagement score (0-1)
         """
         score = post.get("score", 0)
-        comments = post.get("comments", 0)
+        comments = post.get("numComments", post.get("comments", 0))
         
         # Engagement = normalized combination of upvotes and comments
         # Using log scale to avoid extreme values
@@ -129,7 +129,7 @@ class RecommendationService:
         engagement_score = RecommendationService._calculate_engagement_score(post)
         
         recency_score = RecommendationService._calculate_recency_weight(
-            post.get("created_at", datetime.now().isoformat())
+            post.get("createdUtc", post.get("created_at", datetime.now().isoformat()))
         )
         
         # Weighted combination
@@ -194,7 +194,7 @@ class RecommendationService:
         )
 
         # Step 5: Get already-viewed post IDs
-        viewed_post_ids = set(interaction["post_id"] for interaction in interactions)
+        viewed_post_ids = set(str(interaction.get("post_id")) for interaction in interactions if interaction.get("post_id") is not None)
 
         # Step 6: Score and rank candidates (calculated in real-time)
         candidates = []
@@ -203,9 +203,10 @@ class RecommendationService:
                 continue
 
             post = data_store.posts[idx]
-            post_id = post["_id"]
+            post_id = str(post.get("postId") or post.get("_id"))
+            mongo_id = str(post.get("_id"))
 
-            if post_id in viewed_post_ids:
+            if post_id in viewed_post_ids or mongo_id in viewed_post_ids:
                 continue
 
             # Calculate score in real-time
@@ -216,7 +217,7 @@ class RecommendationService:
             # Calculate engagement and recency for response
             engagement_score = RecommendationService._calculate_engagement_score(post)
             recency_weight = RecommendationService._calculate_recency_weight(
-                post.get("created_at", datetime.now().isoformat())
+                post.get("createdUtc", post.get("created_at", datetime.now().isoformat()))
             )
 
             candidates.append(
@@ -235,7 +236,7 @@ class RecommendationService:
 
         recommendations = [
             RecommendationResponse(
-                post_id=cand["post"]["_id"],
+                post_id=str(cand["post"].get("postId") or cand["post"].get("_id")),
                 title=cand["post"].get("title", ""),
                 category=cand["post"].get("category", ""),
                 score=cand["score"],
