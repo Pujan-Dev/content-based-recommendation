@@ -54,8 +54,8 @@ app.add_middleware(
 app.include_router(health_router)
 app.include_router(posts_router)
 app.include_router(recommendations_router)
-# Lifecycle Events
 
+# Lifecycle Events
 @app.on_event("startup")
 async def startup_event():
     """Initialize data and FAISS index on application startup."""

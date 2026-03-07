@@ -17,7 +17,6 @@ EMBEDDING_DIMENSION = 384  # all-MiniLM-L6-v2 embedding size
 EMBEDDING_MODEL_NAME = "paraphrase-MiniLM-L3-v2"
 
 # FAISS Configuration
-
 TOP_K_CANDIDATES = 30  # Number of candidates to retrieve from FAISS
 FINAL_RECOMMENDATIONS = 10  # Number of recommendations to return
 
