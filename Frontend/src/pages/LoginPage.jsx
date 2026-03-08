@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import useAuthStore from "../lib/zustand";
 import { useNavigate } from "react-router-dom";
+import { login, signup } from "../config/backendconnect";
 
 export default function LoginPage() {
   const [isSignupMode, setIsSignupMode] = useState(false);
@@ -18,6 +19,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [name, setName] = useState("");
 
   const { setAuthState } = useAuthStore();
   const navigate = useNavigate();
@@ -46,7 +48,7 @@ export default function LoginPage() {
     navigate("/interests");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     if (!email || !password) {
@@ -66,14 +68,27 @@ export default function LoginPage() {
       return;
     }
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      if (isSignupMode) {
-        handleSignup(email);
-      } else {
-        handleLogin(email);
-      }
-    }, 1200);
+try {
+    if (isSignupMode) {
+        const data = await signup(name, email, password)  // ← real API call
+        if (data.success) {
+            handleSignup(email)
+        } else {
+            setError(data.message)
+        }
+    } else {
+        const data = await login(email, password)  // ← real API call
+        if (data.success) {
+            handleLogin(email)
+        } else {
+            setError(data.message)
+        }
+    }
+} catch (err) {
+    setError("Something went wrong. Try again!")
+} finally {
+    setIsLoading(false)
+}
   };
 
   return (
@@ -106,6 +121,15 @@ export default function LoginPage() {
                 className="h-12 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
+            {isSignupMode && (
+                <input
+                type="text"
+                placeholder="Full Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="h-12 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+                )}
 
             {/* Password */}
             <div className="relative flex flex-col gap-2">

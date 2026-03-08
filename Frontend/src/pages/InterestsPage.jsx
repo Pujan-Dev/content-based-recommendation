@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useNavigate } from "react-router-dom";
+import { saveInterests } from "../config/backendconnect";
 import useAuthStore from "../lib/zustand";
 
 const INTEREST_CATEGORIES = [
@@ -225,12 +226,20 @@ export default function InterestsPage() {
     );
   };
 
-  const handleInterestsComplete = async (interests) => {
-    localStorage.setItem("postlens_interests", JSON.stringify(interests));
-    const user = JSON.parse(localStorage.getItem("postlens_user") || "{}");
-    user.isNewUser = false;
-    localStorage.setItem("postlens_user", JSON.stringify(user));
+const handleInterestsComplete = async (selectedItems) => {
+  try {
+    const selectedCategories = INTEREST_CATEGORIES.filter(category =>
+      category.items.some(item => selectedItems.includes(item))
+    ).map(category => category.title);
 
+    await saveInterests(selectedCategories);
+    setAuthState({ isLoggedIn: true, hasInterests: true });
+
+    navigate("/feed");
+  } catch (err) {
+    console.log(err);
+  }
+};
     // try {
     //   await fetch(`${import.meta.env.VITE_BACKEND_URL}/user/interests`, {
     //     body: {
@@ -242,10 +251,6 @@ export default function InterestsPage() {
     // } catch (error) {
     //   console.log(error);
     // }
-
-    setAuthState({ isLoggedIn: true, hasInterests: true });
-    navigate("/feed");
-  };
 
   const handleContinue = () => {
     handleInterestsComplete(
