@@ -23,7 +23,7 @@ export const handlesignup = async (
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     await User.create({ name, email, password: hashedPassword });
-    res.status(201).json({ message: "Signup success" });
+    res.status(201).json({ success:true, message: "Signup success" });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ success: false, message: error.message });

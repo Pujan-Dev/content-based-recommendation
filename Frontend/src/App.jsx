@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate,  } from 'react-router-dom'
+import axios from 'axios'
 import LoginPage from './pages/LoginPage'
 import InterestsPage from './pages/InterestsPage'
 import FeedPage from './pages/FeedPage'
@@ -12,14 +13,26 @@ function App() {
   const {authState, setAuthState} = useAuthStore()
 
   useEffect(() => {
-    const user = localStorage.getItem('postlens_user')
-    const interests = localStorage.getItem('postlens_interests')
-    setAuthState({
-      isLoggedIn: !!user,
-      hasInterests: !!interests,
-    })
-    setIsLoading(false)
-  }, [])
+    const checkAuth = async () => {
+            try {
+                const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/backend/home`,
+                { withCredentials: true }
+                )
+                if (res.data.success) {
+                    setAuthState({
+                        isLoggedIn: true,
+                        hasInterests: !res.data.requiresCategory
+                    })
+                }
+            } catch (err) {
+                setAuthState({ isLoggedIn: false, hasInterests: false })
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        checkAuth()
+    }, [])
+
 
   if (isLoading) {
     return (
