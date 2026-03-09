@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { decode } from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import User from "../Model/user.js";
 import type { MulterRequest } from "../Middleware/multer.js";
@@ -141,7 +141,7 @@ export const handlehome = async (
 
         const posts = await Post.find({
           postId: { $in: recommendedPostIds },
-        })
+        }).populate("author", "name")
           .sort({ recencyWeight: -1, engagementScore: -1, createdUtc: -1 })
           .skip(skip)
           .limit(limit);
@@ -214,7 +214,8 @@ export const handlehome = async (
     const posts = await Post.find(query)
       .sort({ recencyWeight: -1, engagementScore: -1, createdUtc: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .populate("author", "name");
 
     res.status(200).json({
       success: true,
@@ -256,7 +257,7 @@ export const handlepost = async (
   }
 
   try {
-    jwt.verify(token, process.env.JWT_SECRET as string);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: string };
 
     const {
       title,
@@ -302,6 +303,7 @@ export const handlepost = async (
       postId: "temp_post_id",
       title,
       body,
+      author: decoded.userId,      //jun user login xa tei user le post gareko ho bhaney author field ma tei user ko id save garxa all the data are send like _id, title, body,name, subreddit, category, score, numComments, createdUtc, engagementScore, wordCount, postLength, recencyWeight, hourPosted, dayOfWeek and imageUrl from frontend and we are saving in our database
       subreddit,
       category,
       score,
