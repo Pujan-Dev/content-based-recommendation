@@ -77,16 +77,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Left Side - Login Form */}
+    <div className="flex min-h-screen bg-background items-center justify-center">
+      
+      {/* Login Form */}
       <div className="flex w-full flex-col justify-center px-6 py-12 lg:w-1/2 lg:px-16 xl:px-24 animate-fade-in-left">
+        
         {/* Logo */}
         <div className="mb-10 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
             <Sparkles className="h-5 w-5 text-primary-foreground" />
           </div>
           <h1 className="text-xl font-bold tracking-tight text-foreground">
-            PostLens
+            GazeFlow
           </h1>
           <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-0.5 text-xs font-medium text-primary animate-fade-in stagger-3">
             {isSignupMode ? "SIGNUP" : "LOGIN"}
@@ -96,6 +98,7 @@ export default function LoginPage() {
         {/* Form Card */}
         <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-sm animate-fade-in-up stagger-2">
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+
             {/* Email */}
             <div className="flex flex-col gap-2">
               <input
@@ -131,7 +134,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Confirm Password (Signup only) */}
+            {/* Confirm Password */}
             {isSignupMode && (
               <div className="relative flex flex-col gap-2 animate-fade-in-up">
                 <input
@@ -205,7 +208,7 @@ export default function LoginPage() {
               Sign in with Google
             </button>
 
-            {/* Toggle Sign Up / Sign In */}
+            {/* Toggle */}
             <p className="text-center text-sm text-muted-foreground">
               {isSignupMode
                 ? "Already have an account? "
@@ -222,118 +225,11 @@ export default function LoginPage() {
                 {isSignupMode ? "SIGNIN" : "SIGNUP"}
               </button>
             </p>
+
           </form>
         </div>
       </div>
 
-      {/* Right Side - Feature Showcase */}
-      <div className="relative hidden w-1/2 overflow-hidden bg-secondary/50 p-12 lg:flex lg:flex-col lg:justify-center animate-fade-in-right">
-        {/* Floating decorative elements */}
-        <div className="absolute right-12 top-12 h-3 w-3 rounded-full bg-primary/40 animate-float" />
-        <div className="absolute right-32 top-24 h-2 w-2 rounded-full bg-accent/60 animate-float-delayed" />
-
-        {/* Badge */}
-        <div className="mb-6 flex items-center gap-2 animate-fade-in stagger-4">
-          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/20">
-            <Sparkles className="h-3 w-3 text-accent" />
-          </div>
-          <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold tracking-wider text-accent">
-            SMART RECOMMENDATIONS
-          </span>
-        </div>
-
-        {/* Heading */}
-        <h2 className="mb-4 text-4xl font-bold leading-tight text-foreground xl:text-5xl animate-fade-in-up stagger-5">
-          <span className="text-balance">{"Intelligent Content "}</span>
-          <span className="text-accent">Discovery</span>
-        </h2>
-
-        {/* Description */}
-        <p className="mb-8 max-w-lg text-base leading-relaxed text-muted-foreground animate-fade-in-up stagger-6">
-          Our AI analyzes how you engage with content - tracking viewing
-          patterns, attention duration, and preferences to deliver personalized
-          post recommendations tailored just for you.
-        </p>
-
-        {/* CTA */}
-        <div className="mb-10 flex items-center gap-2 text-sm font-semibold text-foreground animate-fade-in-up stagger-7">
-          {"Explore Features"}
-          <span className="text-lg">{"→"}</span>
-        </div>
-
-        {/* Feature Cards */}
-        <div className="flex gap-4">
-          <div className="flex-1 rounded-2xl border border-border bg-card p-5 animate-fade-in-up stagger-8">
-            <div className="mb-3 flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                <Brain className="h-4 w-4 text-primary" />
-              </div>
-              <span className="text-sm font-semibold text-foreground">
-                Behavior Analysis
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Accuracy Level</span>
-              <span className="font-mono font-semibold text-accent">97.5%</span>
-            </div>
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-              <div
-                className="h-full rounded-full bg-accent animate-progress-97"
-                style={{ width: 0 }}
-              />
-            </div>
-          </div>
-
-          <div
-            className="flex-1 rounded-2xl border border-border bg-card p-5 animate-fade-in-up stagger-8"
-            style={{ animationDelay: "0.9s" }}
-          >
-            <div className="mb-3 flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
-                <TrendingUp className="h-4 w-4 text-accent" />
-              </div>
-              <span className="text-sm font-semibold text-foreground">
-                Gaze Tracking
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Active Analysis</span>
-              <span className="font-mono font-semibold text-primary">24/7</span>
-            </div>
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-              <div
-                className="h-full rounded-full bg-primary animate-progress-85"
-                style={{ width: 0 }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Terminal Card */}
-        <div
-          className="mt-4 rounded-2xl border border-border bg-foreground p-5 animate-fade-in-up"
-          style={{ animationDelay: "1s" }}
-        >
-          <div className="mb-3 flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-primary-foreground/70" />
-            <span className="text-sm font-semibold text-primary-foreground/90">
-              Recommendation Engine
-            </span>
-            <div className="ml-auto flex gap-1.5">
-              <div className="h-2.5 w-2.5 rounded-full bg-destructive" />
-              <div className="h-2.5 w-2.5 rounded-full bg-chart-4" />
-              <div className="h-2.5 w-2.5 rounded-full bg-accent" />
-            </div>
-          </div>
-          <div className="font-mono text-xs leading-relaxed text-primary-foreground/60">
-            <p className="text-primary-foreground/40">$ postlens --analyze</p>
-            <p>{"User engagement: Active"}</p>
-            <p className="text-accent">{"✓ Visual attention tracked"}</p>
-            <p className="text-accent">{"✓ Interest patterns mapped"}</p>
-            <p className="text-primary-foreground/40">{"$ _"}</p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
