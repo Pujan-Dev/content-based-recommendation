@@ -14,6 +14,7 @@ import { cn } from "../lib/utils";
 import useAuthStore from "../lib/zustand";
 import { PostCard } from "../Components/PostCard";
 
+
 // const ALL_POSTS = [
 //   // ART & DESIGN
 //   {
@@ -239,39 +240,48 @@ export default function FeedPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [posts, setPosts] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [userEmail, setUserEmail] = useState("")
   const navigate = useNavigate();
-  const { setAuthState, interests } = useAuthStore()
+  const { setAuthState } = useAuthStore()
+  const [userCategories, setUserCategories] = useState([]);
+  const [user, setUser] = useState(null);
 
+useEffect(() => {
+  const fetchPosts = async () => {
+    try {
+      const data = await getHome()
+
+        if (data.success) {
+    setPosts(data.data || []);
+    setUser(data.user || null);
+    setUserEmail(data.user?.email || "")
+    setUserCategories(data.user?.selectedCategory || []);
+}
+
+    } catch (err) {
+      console.log(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  fetchPosts()
+}, [])
 // useEffect(() => {
-//     const fetchUser = async () => {
+//     const fetchPosts = async () => {
 //         try {
 //             const data = await getHome()
-//             if (data.success && data.user) {
-//                 setUserInterests(data.user.selectedCategory || [])
+//             if (data.success) {
+//                 setPosts(data.data || [])
 //             }
-//         } catch {
-//             setUserInterests([])
+//         } catch (err) {
+//             console.log(err)
+//         } finally {
+//             setIsLoading(false)
 //         }
 //     }
-//     fetchUser()
+//     fetchPosts()
 // }, [])
-useEffect(() => {
-    const fetchPosts = async () => {
-        try {
-            const data = await getHome()
-            if (data.success) {
-                setPosts(data.data || [])
-            }
-        } catch (err) {
-            console.log(err)
-        } finally {
-            setIsLoading(false)
-        }
-    }
-    fetchPosts()
-}, [])
-
-  const userEmail = "User";
 
   const handleLogout = async () => {
     try {
@@ -380,32 +390,32 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* User Interests Tags */}
-      {interests.length > 0 && (
-        <div
-          className="mx-auto max-w-lg px-4 pb-2 animate-fade-in"
-          style={{ animationDelay: "0.4s" }}
+      {userCategories.length > 0 && (
+  <div
+    className="mx-auto max-w-lg px-4 pb-2 animate-fade-in"
+    style={{ animationDelay: "0.4s" }}
+  >
+    <p className="mb-2 text-xs font-medium text-muted-foreground">
+      Your interests:
+    </p>
+    <div className="flex flex-wrap gap-1.5">
+      {userCategories.slice(0, 8).map((cat) => (
+        <span
+          key={cat}
+          className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
         >
-          <p className="mb-2 text-xs font-medium text-muted-foreground">
-            Your interests:
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {interests.slice(0, 8).map((interest) => (
-              <span
-                key={interest}
-                className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
-              >
-                {interest}
-              </span>
-            ))}
-            {interests.length > 8 && (
-              <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                +{interests.length - 8} more
-              </span>
-            )}
-          </div>
-        </div>
+          {cat}
+        </span>
+      ))}
+      {userCategories.length > 8 && (
+        <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
+          +{userCategories.length - 8} more
+        </span>
       )}
+    </div>
+  </div>
+)}
+
 
       {/* Feed */}
       <div className="mx-auto flex max-w-lg flex-col items-center gap-5 px-4 pb-20 pt-2">
@@ -436,7 +446,7 @@ useEffect(() => {
           >
             <h3 className="mb-2 text-lg font-bold text-foreground">Log out?</h3>
             <p className="mb-6 text-sm text-muted-foreground">
-              {`You're signed in as ${userEmail}. Are you sure you want to log out?`}
+              {`You're signed in as ${userEmail || "User"}. Are you sure you want to log out?`}
             </p>
             <div className="flex gap-3">
               <button

@@ -83,3 +83,13 @@ export const trackView = async (postId, category, dwellTime) => {
     )
     return res.data
 }
+
+//Fetching Posts
+
+export const getPost = async (postId) => {
+    const res = await axios.get(
+        `${BASE_URL}/backend/post/${postId}`,
+        { withCredentials: true }
+    )
+    return res.data
+}
