@@ -22,8 +22,8 @@ export function PostCard({ post, index }) {
     const savedDislikes = JSON.parse(
       localStorage.getItem("postlens_dislikes") || "[]",
     );
-    if (savedLikes.includes(post.id)) setLiked(true);
-    if (savedDislikes.includes(post.id)) setDisliked(true);
+    if (savedLikes.includes(post.postId)) setLiked(true);
+    if (savedDislikes.includes(post.postId)) setDisliked(true);
   }, [post.id]);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export function PostCard({ post, index }) {
               const existing = JSON.parse(
                 localStorage.getItem("postlens_view_times") || "{}",
               );
-              existing[post.id] = (existing[post.id] || 0) + viewTime;
+              existing[post.postId] = (existing[post.postId] || 0) + viewTime;
               localStorage.setItem(
                 "postlens_view_times",
                 JSON.stringify(existing),
@@ -68,8 +68,8 @@ export function PostCard({ post, index }) {
     );
 
     if (newLiked) {
-      savedLikes.push(post.id);
-      const idx = savedDislikes.indexOf(post.id);
+      savedLikes.push(post.postId);
+      const idx = savedDislikes.indexOf(post.postId);
       if (idx > -1) savedDislikes.splice(idx, 1);
       setShowHeart(true);
       setTimeout(() => setShowHeart(false), 800);
@@ -123,7 +123,7 @@ export function PostCard({ post, index }) {
   };
 
   const handlePostClick = () => {
-    navigate(`/post/${post.id}`);
+    navigate(`/post/${post.postId}`);
   };
 
   return (
@@ -133,17 +133,26 @@ export function PostCard({ post, index }) {
       style={{ animationDelay: `${index * 0.08}s` }}
     >
       {/* Post Header */}
-      <div className="flex items-center gap-3 px-4 py-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-          {post.avatar}
-        </div>
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-foreground">
-            {post.username}
-          </p>
-          <p className="text-xs text-muted-foreground">{post.timeAgo} ago</p>
-        </div>
-      </div>
+<div className="flex items-center gap-3 px-4 py-3">
+    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+        {post.title?.[0]?.toUpperCase() || "P"}
+    </div>
+    <div className="flex-1">
+        <p className="text-sm font-semibold text-foreground">
+            {post.subreddit}
+        </p>
+        <p className="text-xs text-muted-foreground">
+            {(() => {
+                const diff = Date.now() - new Date(post.createdUtc).getTime()
+                const hours = Math.floor(diff / 3600000)
+                const days = Math.floor(diff / 86400000)
+                if (days > 0) return `${days}d ago`
+                if (hours > 0) return `${hours}h ago`
+                return "Just now"
+            })()}
+        </p>
+    </div>
+</div>
 
       {/* Post Image */}
       <div
@@ -153,7 +162,7 @@ export function PostCard({ post, index }) {
       >
         <img
           src={post.image}
-          alt={post.caption}
+          alt={post.body}
           className="aspect-square w-full object-cover"
           loading="lazy"
         />
@@ -201,18 +210,15 @@ export function PostCard({ post, index }) {
       {/* Caption */}
       <div className="px-4 pb-3">
         <p className="text-sm leading-relaxed text-foreground">
-          <span className="mr-1.5 font-semibold">{post.username}</span>
+          <span className="mr-1.5 font-semibold">{post.subreddit}</span>
           {post.caption}
         </p>
         <div className="mt-2 flex flex-wrap gap-1.5">
-          {post.tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
-            >
-              {tag}
-            </span>
-          ))}
+          {post.category && (
+    <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+        {post.category}
+    </span>
+)}
         </div>
       </div>
 

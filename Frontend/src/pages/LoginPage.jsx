@@ -24,72 +24,60 @@ export default function LoginPage() {
   const { setAuthState } = useAuthStore();
   const navigate = useNavigate();
 
-  const handleLogin = (email) => {
-    localStorage.setItem(
-      "postlens_user",
-      JSON.stringify({ email, loggedInAt: Date.now(), isNewUser: false }),
-    );
-    if (!localStorage.getItem("postlens_interests")) {
-      localStorage.setItem(
-        "postlens_interests",
-        JSON.stringify(["Photography", "Travel", "Technology"]),
-      );
-    }
-    setAuthState({ isLoggedIn: true, hasInterests: true });
-    navigate("/feed");
-  };
+const handleLogin = () => {
+    setAuthState({ isLoggedIn: true, hasInterests: true })
+    navigate("/feed")
+}
 
-  const handleSignup = (email) => {
-    localStorage.setItem(
-      "postlens_user",
-      JSON.stringify({ email, loggedInAt: Date.now(), isNewUser: true }),
-    );
-    setAuthState({ isLoggedIn: true, hasInterests: false });
-    navigate("/interests");
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     if (!email || !password) {
-      setError("Please fill in all fields");
-      return;
+        setError("Please fill in all fields");
+        return;
     }
     if (!email.includes("@")) {
-      setError("Please enter a valid email");
-      return;
+        setError("Please enter a valid email");
+        return;
     }
     if (isSignupMode && password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
+        setError("Passwords do not match");
+        return;
     }
     if (isSignupMode && password.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
+        setError("Password must be at least 6 characters");
+        return;
     }
     setIsLoading(true);
-try {
-    if (isSignupMode) {
-        const data = await signup(name, email, password)  // ← real API call
-        if (data.success) {
-            handleSignup(email)
+    try {
+        if (isSignupMode) {
+            const signupData = await signup(name, email, password)
+            if (signupData.success) {
+                const loginData = await login(email, password)
+                if (loginData.success) {
+                    setAuthState({ isLoggedIn: true, hasInterests: false })
+                    navigate("/interests")
+                } else {
+                    setError(loginData.message)
+                }
+            } else {
+                setError(signupData.message)
+            }
         } else {
-            setError(data.message)
+            const data = await login(email, password)
+            if (data.success) {
+                handleLogin()
+            } else {
+                setError(data.message)
+            }
         }
-    } else {
-        const data = await login(email, password)  // ← real API call
-        if (data.success) {
-            handleLogin(email)
-        } else {
-            setError(data.message)
-        }
+    } catch (err) {
+        setError("Something went wrong. Try again!")
+    } finally {
+        setIsLoading(false)
     }
-} catch (err) {
-    setError("Something went wrong. Try again!")
-} finally {
-    setIsLoading(false)
-}
-  };
+};
 
   return (
     <div className="flex min-h-screen bg-background">
