@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef} from "react";
 import { useNavigate } from "react-router-dom";
+import { getHome } from "../config/backendconnect"
 import {
   Heart,
   ThumbsDown,
@@ -238,18 +239,21 @@ export default function FeedPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [userInterests, setUserInterests] = useState([]);
   const navigate = useNavigate();
-  const {setAuthState} = useAuthStore()
+  const { setAuthState, interests } = useAuthStore()
 
-  useEffect(() => {
-    try {
-      const interests = JSON.parse(
-        localStorage.getItem("postlens_interests") || "[]",
-      );
-      setUserInterests(interests);
-    } catch {
-      setUserInterests([]);
-    }
-  }, []);
+// useEffect(() => {
+//     const fetchUser = async () => {
+//         try {
+//             const data = await getHome()
+//             if (data.success && data.user) {
+//                 setUserInterests(data.user.selectedCategory || [])
+//             }
+//         } catch {
+//             setUserInterests([])
+//         }
+//     }
+//     fetchUser()
+// }, [])
 
   const userEmail = (() => {
     try {
@@ -358,7 +362,7 @@ export default function FeedPage() {
       </div>
 
       {/* User Interests Tags */}
-      {userInterests.length > 0 && (
+      {interests.length > 0 && (
         <div
           className="mx-auto max-w-lg px-4 pb-2 animate-fade-in"
           style={{ animationDelay: "0.4s" }}
@@ -367,7 +371,7 @@ export default function FeedPage() {
             Your interests:
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {userInterests.slice(0, 8).map((interest) => (
+            {interests.slice(0, 8).map((interest) => (
               <span
                 key={interest}
                 className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
@@ -375,9 +379,9 @@ export default function FeedPage() {
                 {interest}
               </span>
             ))}
-            {userInterests.length > 8 && (
+            {interests.length > 8 && (
               <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                +{userInterests.length - 8} more
+                +{interests.length - 8} more
               </span>
             )}
           </div>

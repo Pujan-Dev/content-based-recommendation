@@ -26,10 +26,17 @@ export const logout = async (email,password) => {
 
 // Interests
 export const saveInterests = async (categories) => {
-
     const res = await axios.post(
         `${BASE_URL}/backend/category`,
-        { category: categories[0].toLowerCase() }, //Sending only a string (not array) because backend expects only a string. Will fix later
+        { categories: categories.map(c => c.toLowerCase()) },  // ← array
+        { withCredentials: true }
+    )
+    return res.data
+}
+// Get interests to feed
+export const getHome = async (page = 1, limit = 10) => {
+    const res = await axios.get(
+        `${BASE_URL}/backend/home?page=${page}&limit=${limit}`,
         { withCredentials: true }
     )
     return res.data

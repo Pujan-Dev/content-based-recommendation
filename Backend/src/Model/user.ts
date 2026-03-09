@@ -12,7 +12,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   role: "user" | "admin";
-  selectedCategory: string | null;
+  selectedCategory: string[],
   categoryScore: Map<string, number>;
   viewHistory: IViewHistory[];
   likedPosts: mongoose.Types.ObjectId[];
@@ -34,7 +34,7 @@ const userSchema = new Schema<IUser>({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ["user", "admin"], default: "user" },
-  selectedCategory: { type: String, default: null },
+  selectedCategory: { type: [String], default: [] },
   categoryScore: { type: Map, of: Number, default: {} },
   viewHistory: { type: [viewHistorySchema], default: [] },
   likedPosts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
