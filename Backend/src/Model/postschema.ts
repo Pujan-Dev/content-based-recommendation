@@ -2,6 +2,7 @@ import mongoose, { Document, Schema } from "mongoose";
 
 export interface IPost extends Document {
   postId: string;
+  author: mongoose.Types.ObjectId;
   title: string;
   body: string;
   subreddit: string;
@@ -25,6 +26,7 @@ export interface IPost extends Document {
 
 const postSchema = new Schema<IPost>({
   postId: { type: String, required: true, unique: true },
+  author: { type: Schema.Types.ObjectId, ref: "User", required: true },
   title: { type: String, required: true },
   body: { type: String, required: true },
   subreddit: { type: String, required: true },
