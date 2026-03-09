@@ -16,7 +16,7 @@ export const login = async (email,password) => {
   )
   return res.data
 }
-export const logout = async (email,password) => {
+export const logout = async () => {
   const res = await axios.post(`${BASE_URL}/backend/logout`,
     {},
     {withCredentials: true}
@@ -33,6 +33,7 @@ export const saveInterests = async (categories) => {
     )
     return res.data
 }
+
 // Get interests to feed
 export const getHome = async (page = 1, limit = 10) => {
     const res = await axios.get(
@@ -42,29 +43,43 @@ export const getHome = async (page = 1, limit = 10) => {
     return res.data
 }
 
-export const handlereaction = async (postId, userId,action) => {
-  const connecttoreaction = await axios.post(
-    "http://localhost:8080/reactions",
-    {
-      postId: postId,
-      userId: userId,
-      action: action
-    },
-    {
-      withCredentials: true,
-    }
-  );
+// POSTS
+export const likePost = async (postId) => {
+    const res = await axios.post(
+        `${BASE_URL}/backend/post/${postId}/like`,
+        {},
+        { withCredentials: true }
+    )
+    return res.data
+}
 
-  return connecttoreaction.data;
-};
+export const dislikePost = async (postId) => {
+    const res = await axios.post(
+        `${BASE_URL}/backend/post/${postId}/dislike`,
+        {},
+        { withCredentials: true }
+    )
+    return res.data
+}
 
-export const fetchreactions = async (postId) => {
-  const connecttofetchreaction = await axios.get(
-    `http://localhost:8080/reactions?postId=${postId}`,
-    {
-      withCredentials: true,
-    }
-  );
+export const createPost = async (formData) => {
+    const res = await axios.post(
+        `${BASE_URL}/backend/post`,
+        formData,
+        {
+            withCredentials: true,
+            headers: { "Content-Type": "multipart/form-data" }
+        }
+    )
+    return res.data
+}
 
-  return connecttofetchreaction.data;
+// TRACKING
+export const trackView = async (postId, category, dwellTime) => {
+    const res = await axios.post(
+        `${BASE_URL}/backend/track`,
+        { postId, category, dwellTime },
+        { withCredentials: true }
+    )
+    return res.data
 }

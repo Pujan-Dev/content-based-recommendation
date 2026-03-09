@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef} from "react";
 import { useNavigate } from "react-router-dom";
-import { getHome } from "../config/backendconnect"
+import { getHome, logout } from "../config/backendconnect"
 import {
   Heart,
   ThumbsDown,
@@ -14,230 +14,231 @@ import { cn } from "../lib/utils";
 import useAuthStore from "../lib/zustand";
 import { PostCard } from "../Components/PostCard";
 
-const ALL_POSTS = [
-  // ART & DESIGN
-  {
-    id: 1,
-    username: "photo_master",
-    avatar: "P",
-    caption: "Golden hour at the mountain peak. Nothing beats this view.",
-    image: "/images/feed-1.jpg",
-    tags: ["Photography", "Landscape", "Nature"],
-    category: "Photography",
-    timeAgo: "2h",
-  },
-  {
-    id: 2,
-    username: "digital_dreams",
-    avatar: "D",
-    caption: "New digital artwork exploring the concept of consciousness.",
-    image: "/images/feed-7.jpg",
-    tags: ["Digital Art", "Abstract", "Creative"],
-    category: "Digital Art",
-    timeAgo: "3h",
-  },
-  {
-    id: 3,
-    username: "illustrator_pro",
-    avatar: "I",
-    caption: "Character design sketches for my latest project.",
-    image: "/images/feed-7.jpg",
-    tags: ["Illustration", "Art", "Character Design"],
-    category: "Illustration",
-    timeAgo: "4h",
-  },
-  {
-    id: 4,
-    username: "arch_digest",
-    avatar: "A",
-    caption: "Modern architecture meets nature. This building breathes.",
-    image: "/images/feed-5.jpg",
-    tags: ["Architecture", "Design", "Modern"],
-    category: "Architecture",
-    timeAgo: "5h",
-  },
-  // LIFESTYLE
-  {
-    id: 5,
-    username: "fashion_forward",
-    avatar: "F",
-    caption: "Street style from Milan Fashion Week. Bold choices everywhere.",
-    image: "/images/feed-2.jpg",
-    tags: ["Fashion", "Style", "Milan"],
-    category: "Fashion",
-    timeAgo: "2h",
-  },
-  {
-    id: 6,
-    username: "fit_life",
-    avatar: "F",
-    caption: "Morning workout complete. Consistency is key!",
-    image: "/images/feed-1.jpg",
-    tags: ["Fitness", "Workout", "Health"],
-    category: "Fitness",
-    timeAgo: "3h",
-  },
-  {
-    id: 7,
-    username: "travel_tales",
-    avatar: "T",
-    caption: "Hidden gem in Bali. The locals were so welcoming.",
-    image: "/images/feed-8.jpg",
-    tags: ["Travel", "Bali", "Adventure"],
-    category: "Travel",
-    timeAgo: "4h",
-  },
-  {
-    id: 8,
-    username: "food_artistry",
-    avatar: "F",
-    caption: "Plating is an art. Today's creation: deconstructed tiramisu.",
-    image: "/images/feed-3.jpg",
-    tags: ["Food & Cooking", "Culinary", "Art"],
-    category: "Food & Cooking",
-    timeAgo: "5h",
-  },
-  // TECHNOLOGY
-  {
-    id: 9,
-    username: "ai_researcher",
-    avatar: "A",
-    caption: "Fascinating developments in neural network visualization.",
-    image: "/images/feed-7.jpg",
-    tags: ["AI & Machine Learning", "Tech", "Neural Networks"],
-    category: "AI & Machine Learning",
-    timeAgo: "1h",
-  },
-  {
-    id: 10,
-    username: "dev_hub",
-    avatar: "D",
-    caption: "New React patterns that changed how I build UIs.",
-    image: "/images/feed-5.jpg",
-    tags: ["Web Development", "React", "Coding"],
-    category: "Web Development",
-    timeAgo: "3h",
-  },
-  {
-    id: 11,
-    username: "gadget_guru",
-    avatar: "G",
-    caption: "Unboxing the latest flagship smartphone. First impressions!",
-    image: "/images/feed-2.jpg",
-    tags: ["Gadgets", "Tech", "Review"],
-    category: "Gadgets",
-    timeAgo: "4h",
-  },
-  {
-    id: 12,
-    username: "gamer_zone",
-    avatar: "G",
-    caption: "This indie game deserves more attention. Absolutely stunning.",
-    image: "/images/feed-7.jpg",
-    tags: ["Gaming", "Indie", "Review"],
-    category: "Gaming",
-    timeAgo: "5h",
-  },
-  // ENTERTAINMENT
-  {
-    id: 13,
-    username: "movie_buff",
-    avatar: "M",
-    caption:
-      "Just finished this masterpiece. The cinematography is incredible.",
-    image: "/images/feed-2.jpg",
-    tags: ["Movies & TV", "Film", "Cinema"],
-    category: "Movies & TV",
-    timeAgo: "2h",
-  },
-  {
-    id: 14,
-    username: "music_vibes",
-    avatar: "M",
-    caption: "New album drop! This artist never disappoints.",
-    image: "/images/feed-1.jpg",
-    tags: ["Music", "Album", "Vibes"],
-    category: "Music",
-    timeAgo: "4h",
-  },
-  {
-    id: 15,
-    username: "anime_world",
-    avatar: "A",
-    caption: "This season's anime lineup is absolutely stacked!",
-    image: "/images/feed-7.jpg",
-    tags: ["Anime & Manga", "Animation", "Japan"],
-    category: "Anime & Manga",
-    timeAgo: "6h",
-  },
-  // NATURE & SCIENCE
-  {
-    id: 16,
-    username: "wild_capture",
-    avatar: "W",
-    caption: "Caught this majestic eagle mid-flight. Patience pays off!",
-    image: "/images/feed-4.jpg",
-    tags: ["Wildlife", "Photography", "Nature"],
-    category: "Wildlife",
-    timeAgo: "3h",
-  },
-  {
-    id: 17,
-    username: "cosmos_view",
-    avatar: "C",
-    caption: "Long exposure of the Milky Way from the Atacama Desert.",
-    image: "/images/feed-6.jpg",
-    tags: ["Astronomy", "Space", "Stars"],
-    category: "Astronomy",
-    timeAgo: "5h",
-  },
-  {
-    id: 18,
-    username: "ocean_soul",
-    avatar: "O",
-    caption: "Underwater paradise - the coral reefs are still thriving here.",
-    image: "/images/feed-8.jpg",
-    tags: ["Ocean Life", "Marine", "Conservation"],
-    category: "Ocean Life",
-    timeAgo: "7h",
-  },
-  // SPORTS
-  {
-    id: 19,
-    username: "football_fanatic",
-    avatar: "F",
-    caption: "What a match! That last-minute goal was incredible.",
-    image: "/images/feed-1.jpg",
-    tags: ["Football", "Sports", "Match"],
-    category: "Football",
-    timeAgo: "1h",
-  },
-  {
-    id: 20,
-    username: "basketball_daily",
-    avatar: "B",
-    caption: "NBA playoffs getting intense. Who's your pick to win?",
-    image: "/images/feed-2.jpg",
-    tags: ["Basketball", "NBA", "Playoffs"],
-    category: "Basketball",
-    timeAgo: "4h",
-  },
-  {
-    id: 21,
-    username: "extreme_sports",
-    avatar: "E",
-    caption: "Cliff diving in Thailand. The adrenaline rush is unmatched!",
-    image: "/images/feed-8.jpg",
-    tags: ["Extreme Sports", "Adventure", "Thailand"],
-    category: "Extreme Sports",
-    timeAgo: "6h",
-  },
-];
+// const ALL_POSTS = [
+//   // ART & DESIGN
+//   {
+//     id: 1,
+//     username: "photo_master",
+//     avatar: "P",
+//     caption: "Golden hour at the mountain peak. Nothing beats this view.",
+//     image: "/images/feed-1.jpg",
+//     tags: ["Photography", "Landscape", "Nature"],
+//     category: "Photography",
+//     timeAgo: "2h",
+//   },
+//   {
+//     id: 2,
+//     username: "digital_dreams",
+//     avatar: "D",
+//     caption: "New digital artwork exploring the concept of consciousness.",
+//     image: "/images/feed-7.jpg",
+//     tags: ["Digital Art", "Abstract", "Creative"],
+//     category: "Digital Art",
+//     timeAgo: "3h",
+//   },
+//   {
+//     id: 3,
+//     username: "illustrator_pro",
+//     avatar: "I",
+//     caption: "Character design sketches for my latest project.",
+//     image: "/images/feed-7.jpg",
+//     tags: ["Illustration", "Art", "Character Design"],
+//     category: "Illustration",
+//     timeAgo: "4h",
+//   },
+//   {
+//     id: 4,
+//     username: "arch_digest",
+//     avatar: "A",
+//     caption: "Modern architecture meets nature. This building breathes.",
+//     image: "/images/feed-5.jpg",
+//     tags: ["Architecture", "Design", "Modern"],
+//     category: "Architecture",
+//     timeAgo: "5h",
+//   },
+//   // LIFESTYLE
+//   {
+//     id: 5,
+//     username: "fashion_forward",
+//     avatar: "F",
+//     caption: "Street style from Milan Fashion Week. Bold choices everywhere.",
+//     image: "/images/feed-2.jpg",
+//     tags: ["Fashion", "Style", "Milan"],
+//     category: "Fashion",
+//     timeAgo: "2h",
+//   },
+//   {
+//     id: 6,
+//     username: "fit_life",
+//     avatar: "F",
+//     caption: "Morning workout complete. Consistency is key!",
+//     image: "/images/feed-1.jpg",
+//     tags: ["Fitness", "Workout", "Health"],
+//     category: "Fitness",
+//     timeAgo: "3h",
+//   },
+//   {
+//     id: 7,
+//     username: "travel_tales",
+//     avatar: "T",
+//     caption: "Hidden gem in Bali. The locals were so welcoming.",
+//     image: "/images/feed-8.jpg",
+//     tags: ["Travel", "Bali", "Adventure"],
+//     category: "Travel",
+//     timeAgo: "4h",
+//   },
+//   {
+//     id: 8,
+//     username: "food_artistry",
+//     avatar: "F",
+//     caption: "Plating is an art. Today's creation: deconstructed tiramisu.",
+//     image: "/images/feed-3.jpg",
+//     tags: ["Food & Cooking", "Culinary", "Art"],
+//     category: "Food & Cooking",
+//     timeAgo: "5h",
+//   },
+//   // TECHNOLOGY
+//   {
+//     id: 9,
+//     username: "ai_researcher",
+//     avatar: "A",
+//     caption: "Fascinating developments in neural network visualization.",
+//     image: "/images/feed-7.jpg",
+//     tags: ["AI & Machine Learning", "Tech", "Neural Networks"],
+//     category: "AI & Machine Learning",
+//     timeAgo: "1h",
+//   },
+//   {
+//     id: 10,
+//     username: "dev_hub",
+//     avatar: "D",
+//     caption: "New React patterns that changed how I build UIs.",
+//     image: "/images/feed-5.jpg",
+//     tags: ["Web Development", "React", "Coding"],
+//     category: "Web Development",
+//     timeAgo: "3h",
+//   },
+//   {
+//     id: 11,
+//     username: "gadget_guru",
+//     avatar: "G",
+//     caption: "Unboxing the latest flagship smartphone. First impressions!",
+//     image: "/images/feed-2.jpg",
+//     tags: ["Gadgets", "Tech", "Review"],
+//     category: "Gadgets",
+//     timeAgo: "4h",
+//   },
+//   {
+//     id: 12,
+//     username: "gamer_zone",
+//     avatar: "G",
+//     caption: "This indie game deserves more attention. Absolutely stunning.",
+//     image: "/images/feed-7.jpg",
+//     tags: ["Gaming", "Indie", "Review"],
+//     category: "Gaming",
+//     timeAgo: "5h",
+//   },
+//   // ENTERTAINMENT
+//   {
+//     id: 13,
+//     username: "movie_buff",
+//     avatar: "M",
+//     caption:
+//       "Just finished this masterpiece. The cinematography is incredible.",
+//     image: "/images/feed-2.jpg",
+//     tags: ["Movies & TV", "Film", "Cinema"],
+//     category: "Movies & TV",
+//     timeAgo: "2h",
+//   },
+//   {
+//     id: 14,
+//     username: "music_vibes",
+//     avatar: "M",
+//     caption: "New album drop! This artist never disappoints.",
+//     image: "/images/feed-1.jpg",
+//     tags: ["Music", "Album", "Vibes"],
+//     category: "Music",
+//     timeAgo: "4h",
+//   },
+//   {
+//     id: 15,
+//     username: "anime_world",
+//     avatar: "A",
+//     caption: "This season's anime lineup is absolutely stacked!",
+//     image: "/images/feed-7.jpg",
+//     tags: ["Anime & Manga", "Animation", "Japan"],
+//     category: "Anime & Manga",
+//     timeAgo: "6h",
+//   },
+//   // NATURE & SCIENCE
+//   {
+//     id: 16,
+//     username: "wild_capture",
+//     avatar: "W",
+//     caption: "Caught this majestic eagle mid-flight. Patience pays off!",
+//     image: "/images/feed-4.jpg",
+//     tags: ["Wildlife", "Photography", "Nature"],
+//     category: "Wildlife",
+//     timeAgo: "3h",
+//   },
+//   {
+//     id: 17,
+//     username: "cosmos_view",
+//     avatar: "C",
+//     caption: "Long exposure of the Milky Way from the Atacama Desert.",
+//     image: "/images/feed-6.jpg",
+//     tags: ["Astronomy", "Space", "Stars"],
+//     category: "Astronomy",
+//     timeAgo: "5h",
+//   },
+//   {
+//     id: 18,
+//     username: "ocean_soul",
+//     avatar: "O",
+//     caption: "Underwater paradise - the coral reefs are still thriving here.",
+//     image: "/images/feed-8.jpg",
+//     tags: ["Ocean Life", "Marine", "Conservation"],
+//     category: "Ocean Life",
+//     timeAgo: "7h",
+//   },
+//   // SPORTS
+//   {
+//     id: 19,
+//     username: "football_fanatic",
+//     avatar: "F",
+//     caption: "What a match! That last-minute goal was incredible.",
+//     image: "/images/feed-1.jpg",
+//     tags: ["Football", "Sports", "Match"],
+//     category: "Football",
+//     timeAgo: "1h",
+//   },
+//   {
+//     id: 20,
+//     username: "basketball_daily",
+//     avatar: "B",
+//     caption: "NBA playoffs getting intense. Who's your pick to win?",
+//     image: "/images/feed-2.jpg",
+//     tags: ["Basketball", "NBA", "Playoffs"],
+//     category: "Basketball",
+//     timeAgo: "4h",
+//   },
+//   {
+//     id: 21,
+//     username: "extreme_sports",
+//     avatar: "E",
+//     caption: "Cliff diving in Thailand. The adrenaline rush is unmatched!",
+//     image: "/images/feed-8.jpg",
+//     tags: ["Extreme Sports", "Adventure", "Thailand"],
+//     category: "Extreme Sports",
+//     timeAgo: "6h",
+//   },
+// ];
 
 export default function FeedPage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [userInterests, setUserInterests] = useState([]);
+  const [posts, setPosts] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate();
   const { setAuthState, interests } = useAuthStore()
 
@@ -254,57 +255,75 @@ export default function FeedPage() {
 //     }
 //     fetchUser()
 // }, [])
-
-  const userEmail = (() => {
-    try {
-      const user = JSON.parse(localStorage.getItem("postlens_user") || "{}");
-      return user.email || "User";
-    } catch {
-      return "User";
+useEffect(() => {
+    const fetchPosts = async () => {
+        try {
+            const data = await getHome()
+            if (data.success) {
+                setPosts(data.data || [])
+            }
+        } catch (err) {
+            console.log(err)
+        } finally {
+            setIsLoading(false)
+        }
     }
-  })();
+    fetchPosts()
+}, [])
 
-  const handleLogout = () => {
-    localStorage.removeItem("postlens_user");
-    localStorage.removeItem("postlens_likes");
-    localStorage.removeItem("postlens_dislikes");
-    localStorage.removeItem("postlens_view_times");
-    setAuthState({ isLoggedIn: false, hasInterests: false });
-    navigate("/");
-  };
+  const userEmail = "User";
 
-  const filteredPosts = ALL_POSTS.filter((post) => {
-    const matchesInterest =
-      userInterests.length === 0 ||
-      userInterests.some(
-        (interest) =>
-          post.category.toLowerCase() === interest.toLowerCase() ||
-          post.tags.some((tag) =>
-            tag.toLowerCase().includes(interest.toLowerCase()),
-          ),
-      );
-    return matchesInterest;
-  })
-    .filter((post) => {
-      if (!searchQuery) return true;
-      const q = searchQuery.toLowerCase();
-      return (
-        post.caption.toLowerCase().includes(q) ||
-        post.username.toLowerCase().includes(q) ||
-        post.tags.some((tag) => tag.toLowerCase().includes(q))
-      );
-    })
-    .sort((a, b) => {
-      const aExactMatch = userInterests.some(
-        (i) => a.category.toLowerCase() === i.toLowerCase(),
-      );
-      const bExactMatch = userInterests.some(
-        (i) => b.category.toLowerCase() === i.toLowerCase(),
-      );
-      if (aExactMatch && !bExactMatch) return -1;
-      if (!aExactMatch && bExactMatch) return 1;
-      return 0;
-    });
+  const handleLogout = async () => {
+    try {
+        await logout()
+    } catch (err) {
+        console.log(err)
+    }
+    setAuthState({ isLoggedIn: false, hasInterests: false })
+    navigate("/")
+} 
+  const filteredPosts = posts.filter((post) => {
+    if (!searchQuery) return true
+    const q = searchQuery.toLowerCase()
+    return (
+        post.title?.toLowerCase().includes(q) ||
+        post.body?.toLowerCase().includes(q) ||
+        post.category?.toLowerCase().includes(q)
+    )
+})
+
+  // const filteredPosts = ALL_POSTS.filter((post) => {
+  //   const matchesInterest =
+  //     userInterests.length === 0 ||
+  //     userInterests.some(
+  //       (interest) =>
+  //         post.category.toLowerCase() === interest.toLowerCase() ||
+  //         post.tags.some((tag) =>
+  //           tag.toLowerCase().includes(interest.toLowerCase()),
+  //         ),
+  //     );
+  //   return matchesInterest;
+  // })
+  //   .filter((post) => {
+  //     if (!searchQuery) return true;
+  //     const q = searchQuery.toLowerCase();
+  //     return (
+  //       post.caption.toLowerCase().includes(q) ||
+  //       post.username.toLowerCase().includes(q) ||
+  //       post.tags.some((tag) => tag.toLowerCase().includes(q))
+  //     );
+  //   })
+  //   .sort((a, b) => {
+  //     const aExactMatch = userInterests.some(
+  //       (i) => a.category.toLowerCase() === i.toLowerCase(),
+  //     );
+  //     const bExactMatch = userInterests.some(
+  //       (i) => b.category.toLowerCase() === i.toLowerCase(),
+  //     );
+  //     if (aExactMatch && !bExactMatch) return -1;
+  //     if (!aExactMatch && bExactMatch) return 1;
+  //     return 0;
+  //   });
 
   return (
     <div className="min-h-screen bg-background">
@@ -390,15 +409,19 @@ export default function FeedPage() {
 
       {/* Feed */}
       <div className="mx-auto flex max-w-lg flex-col items-center gap-5 px-4 pb-20 pt-2">
-        {filteredPosts.length === 0 ? (
-          <div className="py-20 text-center text-muted-foreground animate-fade-in">
-            <p className="text-sm">No posts found matching your search.</p>
-          </div>
-        ) : (
-          filteredPosts.map((post, index) => (
-            <PostCard key={post.id} post={post} index={index} />
-          ))
-        )}
+        {isLoading ? (
+    <div className="py-20 text-center text-muted-foreground animate-fade-in">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
+    </div>
+    ) :  filteredPosts.length === 0 ?(
+    <div className="py-20 text-center text-muted-foreground animate-fade-in">
+        <p className="text-sm">No posts yet. Check back later!</p>
+    </div>
+    ) : (
+    filteredPosts.map((post, index) => (
+    <PostCard key={post._id} post={post} index={index} />
+))
+  )}
       </div>
 
       {/* Logout Confirmation Modal */}
