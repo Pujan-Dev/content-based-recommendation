@@ -135,11 +135,11 @@ export function PostCard({ post, index }) {
       {/* Post Header */}
 <div className="flex items-center gap-3 px-4 py-3">
     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-        {post.title?.[0]?.toUpperCase() || "P"}
+        {post.author?.name?.[0]?.toUpperCase() || "User"}
     </div>
     <div className="flex-1">
         <p className="text-sm font-semibold text-foreground">
-            {post.subreddit}
+            {post.author?.name || post.subreddit}
         </p>
         <p className="text-xs text-muted-foreground">
             {(() => {
