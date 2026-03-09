@@ -216,7 +216,7 @@ const INTEREST_CATEGORIES = [
 export default function InterestsPage() {
   const [selectedInterests, setSelectedInterests] = useState([]);
   const navigate = useNavigate();
-  const {setAuthState} = useAuthStore();
+  const { setAuthState, setInterests } = useAuthStore()
 
   const toggleInterest = (interest) => {
     setSelectedInterests((prev) =>
@@ -233,6 +233,7 @@ const handleInterestsComplete = async (selectedItems) => {
     ).map(category => category.title);
 
     await saveInterests(selectedCategories);
+    setInterests(selectedCategories) 
     setAuthState({ isLoggedIn: true, hasInterests: true });
 
     navigate("/feed");

@@ -110,7 +110,7 @@ export const handlehome = async (
     }
 
     //  user ley just signed up gareko xa rah yedi kunai filed selection garena bhaney yesley hadnle garxa
-    if (!user.selectedCategory) {
+    if (!user.selectedCategory || user.selectedCategory.length === 0) {
       res.status(200).json({
         success: true,
         requiresCategory: true,
@@ -171,7 +171,9 @@ export const handlehome = async (
     // we are handling based on the score i.e if our user is new than they have only 1 socre and if they are returing user than they will have wached history and than some user may like post they also have liked post
 
     if (isNewUser) {
-      mergedScore[user.selectedCategory] = 1;
+      user.selectedCategory.forEach((cat: string) => {
+        mergedScore[cat] = 1
+    })
     } else {
       if (user.categoryScore.size > 0) {
         for (const [cat, score] of user.categoryScore.entries()) {
@@ -195,7 +197,7 @@ export const handlehome = async (
 
     // new user ko lagi hamile just selected category ko score 1 diyeko xam but returning user ko lagi hamile category score, liked post ko category score lai merge garera top 3 category nikaleko xam
     const topCategories: string[] = isNewUser
-      ? [user.selectedCategory]
+    ? user.selectedCategory 
       : Object.entries(mergedScore)
           .filter(([, score]) => score > 0)
           .sort((a, b) => b[1] - a[1]) // highes to lowest score anusar sort gareko xam
@@ -563,16 +565,15 @@ export const handleCategory = async (
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
       userId: string;
     };
-    const { category } = req.body;
-
-    if (!category) {
-      res.status(400).json({ success: false, message: "Category is required" });
-      return;
-    }
-
-    await User.findByIdAndUpdate(decoded.userId, {
-      selectedCategory: category.toLowerCase(),
-    });
+    const { categories } = req.body
+if (!categories || !categories.length) {
+    res.status(400).json({ success: false, message: "Categories are required" })
+    return
+}
+const categoryArray: string[] = (categories as string[]).map(c => c.toLowerCase())
+await User.findByIdAndUpdate(decoded.userId, {
+    selectedCategory: categoryArray,
+})
 
     console.log("calling syncUserToML for:", decoded.userId); // 👈
     res
