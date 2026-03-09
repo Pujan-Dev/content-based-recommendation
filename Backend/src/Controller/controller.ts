@@ -5,6 +5,7 @@ import User from "../Model/user.js";
 import type { MulterRequest } from "../Middleware/multer.js";
 import Post from "../Model/postschema.js";
 import type { IPost } from "../Model/postschema.js";
+import { v2 as cloudinary } from "cloudinary"
 
 export const handlesignup = async (
   req: Request,
@@ -263,6 +264,11 @@ export const handlepost = async (
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: string };
+    cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME as string,
+    api_key: process.env.CLOUDINARY_API_KEY as string,
+    api_secret: process.env.CLOUDINARY_API_SECRET as string,
+    })
 
     const {
       title,
@@ -302,7 +308,20 @@ export const handlepost = async (
       return;
     }
 
-    const imageUrl = `https://${multerReq.get("host")}/uploads/${multerReq.file.filename}`;
+    let imageUrl: string | null = null
+    if (multerReq.file) {
+        const uploadResult = await new Promise<string>((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+                { folder: "postlens" },
+                (error, result) => {
+                    if (error || !result) reject(error)
+                    else resolve(result.secure_url)
+                }
+            )
+            stream.end(multerReq.file!.buffer)
+        })
+        imageUrl = uploadResult
+    }
 
     const postDoc = new Post({
       postId: "temp_post_id",
