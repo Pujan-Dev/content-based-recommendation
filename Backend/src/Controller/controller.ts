@@ -221,6 +221,11 @@ export const handlehome = async (
       requiresCategory: false,
       isNewUser,
       message: "Feed data fetched successfully",
+      user: {
+          email: user.email,
+          name: user.name,
+          selectedCategory: user.selectedCategory || []
+      },
       data: posts,
       page,
       limit,

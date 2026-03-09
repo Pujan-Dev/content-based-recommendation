@@ -378,11 +378,13 @@ router.post("/track", protect, handleTrack);
  *           schema:
  *             type: object
  *             required:
- *               - category
+ *               - categories
  *             properties:
- *               category:
- *                 type: string
- *                 example: science
+ *               categories:
+ *                 type: array
+ *                  items:
+ *                    type:string
+ *                 example: ["technology","gaming","travel"]
  *     responses:
  *       200:
  *         description: Category saved successfully
