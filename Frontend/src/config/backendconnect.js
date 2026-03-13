@@ -74,6 +74,23 @@ export const createPost = async (formData) => {
     return res.data
 }
 
+export const updatePost = async (postId, data) => {
+    const res = await axios.put(
+        `${BASE_URL}/backend/post/${postId}`,
+        data,
+        { withCredentials: true }
+    )
+    return res.data
+}
+
+export const deletePost = async (postId) => {
+    const res = await axios.delete(
+        `${BASE_URL}/backend/post/${postId}`,
+        { withCredentials: true }
+    )
+    return res.data
+}
+
 // TRACKING
 export const trackView = async (postId, category, dwellTime) => {
     const res = await axios.post(

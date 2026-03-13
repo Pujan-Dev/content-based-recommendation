@@ -205,9 +205,10 @@ export const handlehome = async (
           .slice(0, 3)
           .map(([cat]) => cat);
 
-    const query: Record<string, unknown> = {
-      category: { $in: topCategories },
-    };
+    const allCategories = [...new Set([...topCategories, ...user.selectedCategory])]
+const query: Record<string, unknown> = {
+    category: { $in: allCategories },
+}
 
     const totalCount = await Post.countDocuments(query);
     const totalPages = Math.ceil(totalCount / limit);
@@ -226,7 +227,10 @@ export const handlehome = async (
       user: {
           email: user.email,
           name: user.name,
-          selectedCategory: user.selectedCategory || []
+          selectedCategory: user.selectedCategory || [],
+          likedPosts: user.likedPosts.map((p: any) => p._id?.toString() || p.toString()),
+          dislikedPosts: user.dislikedPosts.map((p: any) => p._id?.toString() || p.toString()),
+          _id: user._id.toString(),
       },
       data: posts,
       page,
@@ -300,13 +304,6 @@ export const handlepost = async (
       hourPosted: number;
       dayOfWeek: number;
     };
-
-    if (!multerReq.file) {
-      res
-        .status(400)
-        .json({ success: false, message: "Image file is required" });
-      return;
-    }
 
     let imageUrl: string | null = null
     if (multerReq.file) {
@@ -617,6 +614,46 @@ await User.findByIdAndUpdate(decoded.userId, {
     }
   }
 };
+
+export const handleUpdatePost = async (req: Request, res: Response): Promise<void> => {
+  const token = req.cookies?.token
+  if (!token) { res.status(401).json({ success: false, message: "Unauthorized" }); return }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: string }
+    const postId = req.params.postId as string  // ← cast to string
+    const post = await Post.findOne({ postId })
+    if (!post) { res.status(404).json({ success: false, message: "Post not found" }); return }
+    if (post.author.toString() !== decoded.userId) {
+      res.status(403).json({ success: false, message: "Not authorized" }); return
+    }
+    const { title, body, category } = req.body
+    await Post.findOneAndUpdate({ postId }, { title, body, category, subreddit: `r/${category}` })
+    res.json({ success: true, message: "Post updated successfully" })
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Internal server error" })
+  }
+}
+
+export const handleDeletePost = async (req: Request, res: Response): Promise<void> => {
+  const token = req.cookies?.token
+  if (!token) { res.status(401).json({ success: false, message: "Unauthorized" }); return }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: string }
+    const postId = req.params.postId as string  // ← cast to string
+    const post = await Post.findOne({ postId })
+    if (!post) { res.status(404).json({ success: false, message: "Post not found" }); return }
+    if (post.author.toString() !== decoded.userId) {
+      res.status(403).json({ success: false, message: "Not authorized" }); return
+    }
+    await Post.findOneAndDelete({ postId })
+    await User.updateMany({}, {
+      $pull: { likedPosts: post._id, dislikedPosts: post._id }
+    })
+    res.json({ success: true, message: "Post deleted successfully" })
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Internal server error" })
+  }
+}
 
 // for sync to pujan ml model
 

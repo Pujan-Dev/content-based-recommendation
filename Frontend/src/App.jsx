@@ -3,6 +3,8 @@ import { Routes, Route, Navigate,  } from 'react-router-dom'
 import axios from 'axios'
 import LoginPage from './pages/LoginPage'
 import InterestsPage from './pages/InterestsPage'
+import CreatePostPage from './pages/CreatePostPage'
+import EditPostPage from './pages/EditPostPage'
 import FeedPage from './pages/FeedPage'
 import PostDetailPage from './pages/PostDetailPage'
 import useAuthStore from './lib/zustand'
@@ -21,7 +23,8 @@ function App() {
                 if (res.data.success) {
                     setAuthState({
                         isLoggedIn: true,
-                        hasInterests: !res.data.requiresCategory
+                        hasInterests: !res.data.requiresCategory,
+                        userId: res.data.user?._id 
                     })
                 }
             } catch (err) {
@@ -90,7 +93,28 @@ function App() {
           )
         }
       />
+      <Route
+        path="/create-post"
+        element={
+          !authState.isLoggedIn ? (
+            <Navigate to="/" replace />
+          ) : (
+            <CreatePostPage />
+          )
+        }
+      />
+      <Route
+        path="/edit-post/:postId"
+        element={
+        !authState.isLoggedIn ? (
+            <Navigate to="/" replace />
+        ) : (
+            <EditPostPage />
+          )
+        }
+      />
     </Routes>
+    
   )
 }
 

@@ -196,7 +196,7 @@ const handleLogin = () => {
             {/* Google Sign In */}
             <button
               type="button"
-              onClick={() => onLogin("google-user@gmail.com")}
+              onClick={() => {}}
               className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card font-medium text-foreground transition-all duration-200 hover:bg-secondary btn-tap"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">
