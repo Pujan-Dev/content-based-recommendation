@@ -9,9 +9,12 @@ import {
   handleDislike,
   handleTrack,
   handleCategory,
+
+  handleUpdatePost, handleDeletePost,
+
   handleAdminGetAllPosts,
   handleAdminGetAllUsers,
-  handleAdminDeletePost,
+  handleAdminDeletePost
 } from "../Controller/controller.js";
 import { protect } from "../Middleware/tokens.js";
 import uploads from "../Middleware/multer.js";
@@ -406,6 +409,72 @@ router.post("/track", protect, handleTrack);
  */
 router.post("/category", protect, handleCategory);
 
+/**
+ * @openapi
+ * /backend/post/{postId}:
+ *   put:
+ *     summary: Update a post (author only)
+ *     tags:
+ *       - Posts
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               body:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Post updated successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Not authorized
+ *       404:
+ *         description: Post not found
+ */
+router.put("/post/:postId", protect, handleUpdatePost)
+
+/**
+ * @openapi
+ * /backend/post/{postId}:
+ *   delete:
+ *     summary: Delete a post (author only)
+ *     tags:
+ *       - Posts
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Post deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Not authorized
+ *       404:
+ *         description: Post not found
+ */
+router.delete("/post/:postId", protect, handleDeletePost)
 /**
  * @openapi
  * /backend/admin/posts:
