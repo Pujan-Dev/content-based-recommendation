@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from datetime import datetime, timezone
 from typing import List, Dict, Any
 import numpy as np
+import random
 
 from config import (
     TOP_K_CANDIDATES,
@@ -80,6 +81,40 @@ class RecommendationService:
             return 0.5
     
     @staticmethod
+    def _normalize_categories(categories: Any) -> List[str]:
+        """Normalize category preferences into a flat list of strings."""
+        if not isinstance(categories, list):
+            return []
+
+        flattened = []
+        for item in categories:
+            if isinstance(item, list):
+                flattened.extend(RecommendationService._normalize_categories(item))
+            elif isinstance(item, dict):
+                # Map dict entries into string category names if possible
+                category_name = item.get("category") or item.get("name") or item.get("value")
+                if category_name:
+                    flattened.extend(RecommendationService._normalize_categories([category_name]))
+            elif item is None:
+                continue
+            else:
+                # Cast non-str values safely
+                normalized_item = str(item).strip()
+                if normalized_item:
+                    flattened.append(normalized_item)
+
+        # Deduplicate while preserving order
+        seen = set()
+        result = []
+        for value in flattened:
+            normalized_value = value.strip()
+            if normalized_value and normalized_value not in seen:
+                seen.add(normalized_value)
+                result.append(normalized_value)
+
+        return result
+
+    @staticmethod
     def _calculate_category_score(user_preferences: Dict[str, Any], post_category: str) -> float:
         """
         Calculate category match score based on user preferences.
@@ -91,16 +126,14 @@ class RecommendationService:
         Returns:
             Category match score (0-1)
         """
-        # Get all preference categories
-        categories = user_preferences.get("categories", [])
-        
-        # If post category matches any user preference, return high score
-        if post_category in categories:
-            # Find the preference position (earlier = higher priority)
-            index = categories.index(post_category)
-            # Score decreases with position (first=1.0, second=0.7, third=0.4)
+        post_category_normalized = str(post_category).strip().lower()
+        categories = RecommendationService._normalize_categories(user_preferences.get("categories", []))
+        categories_lower = [str(c).strip().lower() for c in categories if isinstance(c, str)]
+
+        if post_category_normalized in categories_lower:
+            index = categories_lower.index(post_category_normalized)
             return max(1.0 - (index * 0.3), 0.0)
-        
+
         return 0.0
     
     @staticmethod
@@ -173,7 +206,8 @@ class RecommendationService:
         interactions = user.get("interactions", [])
 
         # Step 2: Build query from preferences
-        categories = preferences.get("categories", [])
+        categories = RecommendationService._normalize_categories(preferences.get("categories", []))
+
         if not categories:
             query_text = "interesting posts"
         else:
@@ -246,6 +280,9 @@ class RecommendationService:
             )
             for cand in top_recommendations
         ]
+
+        # Randomize final recommendation order to avoid repetitive patterns
+        random.shuffle(recommendations)
 
         return RecommendationsResponse(
             user_id=user_id,

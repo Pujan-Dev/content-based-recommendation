@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { ArrowLeft, Upload, X } from "lucide-react"
 import { createPost } from "../config/backendconnect"
+import { usePostsStore } from "../lib/zustand"
 
 const CATEGORIES = [
     "gaming", "relationships", "career & jobs", "education", "finance",
@@ -12,6 +13,7 @@ const CATEGORIES = [
 
 export default function CreatePostPage() {
     const navigate = useNavigate()
+    const { addPost } = usePostsStore()
     const [title, setTitle] = useState("")
     const [body, setBody] = useState("")
     const [category, setCategory] = useState("")
@@ -55,6 +57,10 @@ export default function CreatePostPage() {
 
             const data = await createPost(formData)
             if (data.success) {
+                // Add new post to the store (append to bottom)
+                if (data.data) {
+                    addPost(data.data)
+                }
                 navigate("/feed")
             } else {
                 setError(data.message)

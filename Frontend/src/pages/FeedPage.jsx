@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getHome, logout } from "../config/backendconnect"
 import { LogOut, Sparkles, Search, User, Plus } from "lucide-react";
 
-import useAuthStore from "../lib/zustand";
+import useAuthStore, { usePostsStore } from "../lib/zustand";
 import { PostCard } from "../Components/PostCard";
 
 
@@ -18,32 +18,67 @@ export default function FeedPage() {
   const { setAuthState } = useAuthStore()
   const [userCategories, setUserCategories] = useState([]);
   const [user, setUser] = useState(null);
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [likedPostIds, setLikedPostIds] = useState([])
   const [dislikedPostIds, setDislikedPostIds] = useState([])
+  const { posts: storePosts, setPosts: setStorePosts, addPost } = usePostsStore()
 
 useEffect(() => {
-  const fetchPosts = async () => {
+  let mounted = true
+  const fetchPosts = async (pageNum = 1) => {
     try {
-      const data = await getHome()
+      const data = await getHome(pageNum, 10)
 
-        if (data.success) {
-    setPosts(data.data || []);
-    setUser(data.user || null);
-    setLikedPostIds(data.user?.likedPosts || [])
-    setDislikedPostIds(data.user?.dislikedPosts || [])
-    setUserEmail(data.user?.email || "")
-    setUserCategories(data.user?.selectedCategory || []);
-}
+      if (!mounted) return
 
+      if (data.success) {
+        if (pageNum === 1) {
+          setPosts(data.data || [])
+          setStorePosts(data.data || [])
+        } else {
+          // Append new posts for infinite scroll
+          setStorePosts([...storePosts, ...(data.data || [])])
+        }
+        setUser(data.user || null)
+        setLikedPostIds(data.user?.likedPosts || [])
+        setDislikedPostIds(data.user?.dislikedPosts || [])
+        setUserEmail(data.user?.email || "")
+        setUserCategories(data.user?.selectedCategory || [])
+        setHasMore(data.hasMore || false)
+      }
     } catch (err) {
       console.log(err)
     } finally {
-      setIsLoading(false)
+      if (mounted) {
+        setIsLoading(false)
+        setLoadingMore(false)
+      }
     }
   }
 
   fetchPosts()
-}, [])
+
+  // Infinite scroll listener
+  const handleScroll = () => {
+    if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 100 && hasMore && !loadingMore && !isLoading) {
+      setLoadingMore(true)
+      setPage(prev => {
+        const newPage = prev + 1
+        fetchPosts(newPage)
+        return newPage
+      })
+    }
+  }
+
+  window.addEventListener('scroll', handleScroll)
+
+  return () => {
+    mounted = false
+    window.removeEventListener('scroll', handleScroll)
+  }
+}, [hasMore, loadingMore, isLoading])
 // useEffect(() => {
 //     const fetchPosts = async () => {
 //         try {
@@ -69,7 +104,7 @@ useEffect(() => {
     setAuthState({ isLoggedIn: false, hasInterests: false })
     navigate("/")
 } 
-  const filteredPosts = posts.filter((post) => {
+  const filteredPosts = (storePosts.length > 0 ? storePosts : posts).filter((post) => {
     if (!searchQuery) return true
     const q = searchQuery.toLowerCase()
     return (
@@ -199,7 +234,8 @@ useEffect(() => {
         <p className="text-sm">No posts yet. Check back later!</p>
     </div>
     ) : (
-    filteredPosts.map((post, index) => (
+    <>
+    {filteredPosts.map((post, index) => (
     <PostCard 
     key={post._id} 
     post={post} 
@@ -207,7 +243,19 @@ useEffect(() => {
     initialLiked={likedPostIds.includes(post._id?.toString())}
     initialDisliked={dislikedPostIds.includes(post._id?.toString())}
 />
-))
+))}
+    {loadingMore && (
+      <div className="py-4 text-center text-muted-foreground">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent mx-auto" />
+        <p className="text-xs mt-2">Loading more posts...</p>
+      </div>
+    )}
+    {!hasMore && filteredPosts.length > 0 && (
+      <div className="py-4 text-center text-muted-foreground">
+        <p className="text-xs">No more posts to load</p>
+      </div>
+    )}
+    </>
   )}
       </div>
 

@@ -272,7 +272,12 @@ class DataStore:
 
         self.posts_by_id = {str(p.get("_id")): p for p in self.posts if p.get("_id") is not None}
         self.posts_by_id.update({str(p.get("postId")): p for p in self.posts if p.get("postId") is not None})
+
         self.users_by_id = {u["user_id"]: u for u in self.users if u.get("user_id")}
+        # Accept both explicit user_id and MongoDB _id for user lookup
+        for u in self.users:
+            if u.get("_id") and u.get("_id") != u.get("user_id"):
+                self.users_by_id[str(u["_id"])] = u
 
         print(f"Loaded {len(self.posts)} posts from MongoDB")
         print(f"Loaded {len(self.users)} users from MongoDB")
@@ -368,9 +373,20 @@ class DataStore:
                     user.setdefault("interactions", [])
 
                 self.users_by_id = {u.get('user_id'): u for u in self.users if u.get("user_id")}
+                for u in self.users:
+                    if u.get("_id") and u.get("_id") != u.get("user_id"):
+                        self.users_by_id[str(u["_id"])] = u
                 print(f"Loaded {len(self.users)} users from {USERS_FILE.name}")
         else:
             raise FileNotFoundError(f"Users file not found: {USERS_FILE}")
+
+    def get_user(self, user_id: str) -> Optional[Dict[str, Any]]:
+        """Fetch user by ID from in-memory cache."""
+        # Direct match, then fallback to MongoDB _id if needed
+        user = self.users_by_id.get(user_id)
+        if user is not None:
+            return user
+        return self.users_by_id.get(str(user_id))
 
     def load_embedding_model(self):
         """Load the SentenceTransformer embedding model."""

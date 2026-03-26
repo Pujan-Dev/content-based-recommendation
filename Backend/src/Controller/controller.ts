@@ -24,7 +24,7 @@ export const handlesignup = async (
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     await User.create({ name, email, password: hashedPassword });
-    res.status(201).json({ success:true, message: "Signup success" });
+    res.status(201).json({ success: true, message: "Signup success" });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ success: false, message: error.message });
@@ -147,6 +147,9 @@ export const handlehome = async (
           .skip(skip)
           .limit(limit);
 
+        // Randomize order to show different posts on refresh
+        const randomizedPosts = posts.sort(() => Math.random() - 0.5);
+
         const totalCount = mlData.total_candidates ?? posts.length;
         const totalPages = Math.ceil(totalCount / limit);
 
@@ -155,7 +158,7 @@ export const handlehome = async (
           requiresCategory: false,
           isNewUser,
           message: "Feed data fetched successfully",
-          data: posts,
+          data: randomizedPosts,
           page,
           limit,
           totalCount,
@@ -174,7 +177,7 @@ export const handlehome = async (
     if (isNewUser) {
       user.selectedCategory.forEach((cat: string) => {
         mergedScore[cat] = 1
-    })
+      })
     } else {
       if (user.categoryScore.size > 0) {
         for (const [cat, score] of user.categoryScore.entries()) {
@@ -198,17 +201,17 @@ export const handlehome = async (
 
     // new user ko lagi hamile just selected category ko score 1 diyeko xam but returning user ko lagi hamile category score, liked post ko category score lai merge garera top 3 category nikaleko xam
     const topCategories: string[] = isNewUser
-    ? user.selectedCategory 
+      ? user.selectedCategory
       : Object.entries(mergedScore)
-          .filter(([, score]) => score > 0)
-          .sort((a, b) => b[1] - a[1]) // highes to lowest score anusar sort gareko xam
-          .slice(0, 3)
-          .map(([cat]) => cat);
+        .filter(([, score]) => score > 0)
+        .sort((a, b) => b[1] - a[1]) // highes to lowest score anusar sort gareko xam
+        .slice(0, 3)
+        .map(([cat]) => cat);
 
     const allCategories = [...new Set([...topCategories, ...user.selectedCategory])]
-const query: Record<string, unknown> = {
-    category: { $in: allCategories },
-}
+    const query: Record<string, unknown> = {
+      category: { $in: allCategories },
+    }
 
     const totalCount = await Post.countDocuments(query);
     const totalPages = Math.ceil(totalCount / limit);
@@ -219,20 +222,23 @@ const query: Record<string, unknown> = {
       .limit(limit)
       .populate("author", "name");
 
+    // Randomize order to show different posts on refresh
+    const randomizedPosts = posts.sort(() => Math.random() - 0.5);
+
     res.status(200).json({
       success: true,
       requiresCategory: false,
       isNewUser,
       message: "Feed data fetched successfully",
       user: {
-          email: user.email,
-          name: user.name,
-          selectedCategory: user.selectedCategory || [],
-          likedPosts: user.likedPosts.map((p: any) => p._id?.toString() || p.toString()),
-          dislikedPosts: user.dislikedPosts.map((p: any) => p._id?.toString() || p.toString()),
-          _id: user._id.toString(),
+        email: user.email,
+        name: user.name,
+        selectedCategory: user.selectedCategory || [],
+        likedPosts: user.likedPosts.map((p: any) => p._id?.toString() || p.toString()),
+        dislikedPosts: user.dislikedPosts.map((p: any) => p._id?.toString() || p.toString()),
+        _id: user._id.toString(),
       },
-      data: posts,
+      data: randomizedPosts,
       page,
       limit,
       totalCount,
@@ -269,9 +275,9 @@ export const handlepost = async (
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: string };
     cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME as string,
-    api_key: process.env.CLOUDINARY_API_KEY as string,
-    api_secret: process.env.CLOUDINARY_API_SECRET as string,
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME as string,
+      api_key: process.env.CLOUDINARY_API_KEY as string,
+      api_secret: process.env.CLOUDINARY_API_SECRET as string,
     })
 
     const {
@@ -307,17 +313,17 @@ export const handlepost = async (
 
     let imageUrl: string | null = null
     if (multerReq.file) {
-        const uploadResult = await new Promise<string>((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-                { folder: "postlens" },
-                (error, result) => {
-                    if (error || !result) reject(error)
-                    else resolve(result.secure_url)
-                }
-            )
-            stream.end(multerReq.file!.buffer)
-        })
-        imageUrl = uploadResult
+      const uploadResult = await new Promise<string>((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "postlens" },
+          (error, result) => {
+            if (error || !result) reject(error)
+            else resolve(result.secure_url)
+          }
+        )
+        stream.end(multerReq.file!.buffer)
+      })
+      imageUrl = uploadResult
     }
 
     const postDoc = new Post({
@@ -589,14 +595,14 @@ export const handleCategory = async (
       userId: string;
     };
     const { categories } = req.body
-if (!categories || !categories.length) {
-    res.status(400).json({ success: false, message: "Categories are required" })
-    return
-}
-const categoryArray: string[] = (categories as string[]).map(c => c.toLowerCase())
-await User.findByIdAndUpdate(decoded.userId, {
-    selectedCategory: categoryArray,
-})
+    if (!categories || !categories.length) {
+      res.status(400).json({ success: false, message: "Categories are required" })
+      return
+    }
+    const categoryArray: string[] = (categories as string[]).map(c => c.toLowerCase())
+    await User.findByIdAndUpdate(decoded.userId, {
+      selectedCategory: categoryArray,
+    })
 
     console.log("calling syncUserToML for:", decoded.userId); // 👈
     res

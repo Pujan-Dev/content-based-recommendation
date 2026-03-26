@@ -7,4 +7,12 @@ const useAuthStore = create((set) => ({
     setInterests: (interests) => set(() => ({ interests })),
 }))
 
+const usePostsStore = create((set) => ({
+    posts: [],
+    setPosts: (posts) => set(() => ({ posts })),
+    addPost: (post) => set((state) => ({ posts: [...state.posts, post] })),
+    prependPost: (post) => set((state) => ({ posts: [post, ...state.posts] })),
+}))
+
+export { useAuthStore, usePostsStore }
 export default useAuthStore

@@ -385,7 +385,7 @@ router.post("/track", protect, handleTrack);
  *             properties:
  *               categories:
  *                 type: array
- *                  items:
+ *                 items:
  *                    type:string
  *                 example: ["technology","gaming","travel"]
  *     responses:
