@@ -115,3 +115,5 @@ desktop.ini
 *.local
 .vercel
 .turbo
+*.pkl
+node_modules/

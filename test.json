@@ -1,0 +1,78 @@
+{
+    "gaming": [
+        "fortnite", "apex", "league", "rocketleague", "dnd", "minecraft", "valorant", 
+        "csgo", "cod", "call of duty", "pubg", "battlefield", "overwatch", "elden ring",
+        "zelda", "skyrim", "assassins creed", "rpg", "moba", "gamer", "gaming", "steam",
+        "xbox", "playstation", "nintendo", "switch", "fps", "esports", "multiplayer"
+    ],
+    "relationships": [
+        "relationship", "dating", "love", "breakup", "marriage", "divorce", "boyfriend", 
+        "girlfriend", "partner", "crush", "flirt", "romance", "friendship", "toxic", 
+        "conflict", "communication", "jealousy", "advice", "trust", "feelings", "proposal"
+    ],
+    "career_jobs": [
+        "job", "career", "resume", "interview", "application", "hiring", "promotion", 
+        "salary", "internship", "work", "freelance", "contract", "office", "manager", 
+        "boss", "colleague", "employment", "profession", "networking", "skills", "job search"
+    ],
+    "education": [
+        "school", "college", "university", "exam", "study", "assignment", "homework", 
+        "research", "grades", "test", "lecture", "professor", "degree", "class", 
+        "course", "tuition", "scholarship", "study tips", "student", "learning"
+    ],
+    "finance": [
+        "money", "stocks", "crypto", "budget", "finance", "saving", "investment", 
+        "bitcoin", "ethereum", "loan", "debt", "bank", "credit", "tax", "retirement", 
+        "portfolio", "dividends", "trading", "economy", "financial planning"
+    ],
+    "technology": [
+        "tech", "programming", "buildapc", "software", "hardware", "ai", "machine learning",
+        "coding", "python", "javascript", "java", "react", "node", "data science", 
+        "cloud", "servers", "network", "security", "blockchain", "gadgets", "computers"
+    ],
+    "entertainment": [
+        "movie", "tv", "series", "netflix", "disney", "hollywood", "bollywood", "music", 
+        "concert", "show", "theater", "celebrity", "actors", "actress", "gaming", 
+        "streaming", "youtube", "tiktok", "reviews", "reviews", "entertainment"
+    ],
+    "mental_health": [
+        "depression", "anxiety", "stress", "mental health", "therapy", "counseling", 
+        "self care", "mindfulness", "panic", "suicide", "help", "support", "PTSD", 
+        "emotional", "meditation", "motivation", "overthinking", "burnout", "mental illness", "coping"
+    ],
+    "parenting_family": [
+        "parent", "family", "kids", "children", "baby", "toddler", "adolescent", "school", 
+        "homework", "education", "mom", "dad", "siblings", "grandparent", "household", 
+        "childcare", "discipline", "pregnancy", "family time", "relationship"
+    ],
+    "health_fitness": [
+        "exercise", "workout", "gym", "running", "diet", "nutrition", "weight loss", 
+        "fitness", "cardio", "strength", "training", "yoga", "pilates", "health", "vitamins", 
+        "supplements", "wellness", "endurance", "sports", "healthy"
+    ],
+    "travel": [
+        "trip", "vacation", "tourism", "flight", "hotel", "backpacking", "road trip", 
+        "adventure", "itinerary", "guide", "beach", "mountains", "travel tips", "visa", 
+        "passport", "travel blog", "culture", "explore", "destination", "journey"
+    ],
+    "sports": [
+        "football", "soccer", "basketball", "tennis", "cricket", "baseball", "hockey", 
+        "olympics", "athletics", "golf", "rugby", "coach", "team", "match", "league", 
+        "training", "tournament", "player", "score", "competition"
+    ],
+    "news_politics": [
+        "news", "politics", "election", "government", "policy", "vote", "campaign", 
+        "president", "prime minister", "congress", "senate", "political party", 
+        "debate", "protest", "law", "bill", "diplomacy", "international", "political news", "current affairs"
+    ],
+    "food_cooking": [
+        "recipe", "cook", "cooking", "baking", "meal", "restaurant", "ingredients", 
+        "food", "dinner", "lunch", "breakfast", "healthy eating", "chef", "dessert", 
+        "grill", "vegetarian", "vegan", "snack", "kitchen", "cuisine"
+    ],
+    "science": [
+        "physics", "chemistry", "biology", "research", "experiment", "laboratory", 
+        "space", "astronomy", "earth", "math", "quantum", "genetics", "technology", 
+        "environment", "climate", "scientist", "study", "discovery", "innovation", "theory"
+    ]
+}

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es2022",
     "module": "nodenext",
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "rootDir": "./src",
     "outDir": "./dist",
     "strict": true,
@@ -18,7 +18,7 @@
     "exactOptionalPropertyTypes": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "types": ["node"]
+    "types": ["node"],
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]
