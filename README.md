@@ -1,5 +1,3 @@
-you can just import the files donot have to add .js/.ts at end
-
 # Content-Based Recommendation System
 
 A full-stack project for a personalized social media feed, featuring a Node.js/Express backend, a FastAPI-based recommendation engine, a React frontend, and a fine-tuned embedding model.
